@@ -1,25 +1,30 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
 import { 
-  Compass, QrCode, ArrowLeft, RefreshCw, Sparkles, MapPin, 
+  Compass, QrCode, ArrowLeft, Sparkles, MapPin, 
   Clock, Navigation, HelpCircle, PhoneCall, Volume2, Globe
 } from 'lucide-react';
 import { Attraction } from '../types/gardens';
-import { ATTRACTIONS_DATA, FACILITIES_DATA, ASSET_MAP_IMAGE } from '../data/attractions';
+import { ATTRACTIONS_DATA } from '../data/attractions';
 import { InteractiveMap } from './InteractiveMap';
+import { SupportedLanguage, TRANSLATIONS } from '../data/translations';
 
 interface KioskModeProps {
   onExitKiosk: () => void;
   onSelectAttraction: (attraction: Attraction | null) => void;
   itineraryAttractionIds: string[];
+  currentLang: SupportedLanguage;
+  onSelectLang: (lang: SupportedLanguage) => void;
 }
 
 export const KioskMode: React.FC<KioskModeProps> = ({
   onExitKiosk,
   onSelectAttraction,
-  itineraryAttractionIds
+  itineraryAttractionIds,
+  currentLang,
+  onSelectLang
 }) => {
-  const [selectedLanguage, setSelectedLanguage] = useState<'EN' | '中文' | 'Melayu' | 'தமிழ்'>('EN');
+  const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
   const [activeKioskFilter, setActiveKioskFilter] = useState<'all' | 'conservatory' | 'supertree' | 'family'>('all');
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [idleSeconds, setIdleSeconds] = useState<number>(0);
@@ -27,23 +32,23 @@ export const KioskMode: React.FC<KioskModeProps> = ({
 
   // Quick destinations for one-touch kiosk navigation
   const quickDestinations = [
-    { id: 'flower-dome', label: 'Flower Dome', sub: 'Cooled Conservatory', icon: '🌸' },
-    { id: 'cloud-forest', label: 'Cloud Forest', sub: '35m Waterfall', icon: '💧' },
-    { id: 'supertree-grove', label: 'Supertree Grove', sub: 'Garden Rhapsody', icon: '🌳' },
-    { id: 'ocbc-skyway', label: 'OCBC Skyway', sub: 'Aerial Walkway', icon: '🌉' },
-    { id: 'floral-fantasy', label: 'Floral Fantasy', sub: 'Suspended Blooms', icon: '✨' },
-    { id: 'children-garden', label: 'Children’s Water Play', sub: 'Splash Zone & Treehouse', icon: '⛲' },
+    { id: 'flower-dome', icon: '🌸' },
+    { id: 'cloud-forest', icon: '💧' },
+    { id: 'supertree-grove', icon: '🌳' },
+    { id: 'ocbc-skyway', icon: '🌉' },
+    { id: 'floral-fantasy', icon: '✨' },
+    { id: 'children-garden', icon: '⛲' },
   ];
 
   // Generate shareable QR code for the kiosk
   useEffect(() => {
-    const url = `${window.location.origin}${window.location.pathname}?src=kiosk_station_1`;
+    const url = `${window.location.origin}${window.location.pathname}?src=kiosk_station_1&lang=${currentLang}`;
     QRCode.toDataURL(url, {
       width: 220,
       margin: 1,
       color: { dark: '#064e3b', light: '#ffffff' }
     }).then(setQrCodeUrl).catch(console.error);
-  }, []);
+  }, [currentLang]);
 
   // Idle timer to simulate public interactive terminal behavior
   useEffect(() => {
@@ -53,7 +58,6 @@ export const KioskMode: React.FC<KioskModeProps> = ({
           setShowIdleWarning(true);
         }
         if (prev >= 75) {
-          // Reset kiosk state on timeout
           setShowIdleWarning(false);
           setActiveKioskFilter('all');
           return 0;
@@ -77,17 +81,25 @@ export const KioskMode: React.FC<KioskModeProps> = ({
     };
   }, []);
 
+  const languageButtons: { code: SupportedLanguage; label: string }[] = [
+    { code: 'en', label: 'EN' },
+    { code: 'zh', label: '中文' },
+    { code: 'ms', label: 'Melayu' },
+    { code: 'ta', label: 'தமிழ்' },
+  ];
+
   return (
     <div className="min-h-screen bg-stone-950 text-white flex flex-col justify-between p-4 sm:p-6 select-none overflow-x-hidden">
       {/* Kiosk Top Bar */}
       <header className="flex items-center justify-between pb-4 border-b border-stone-800">
         <div className="flex items-center gap-4">
           <button
+            type="button"
             onClick={onExitKiosk}
-            className="px-4 py-3 rounded-2xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-sm font-semibold flex items-center gap-2 border border-stone-700 active:scale-95 transition-all"
+            className="px-4 py-3 rounded-2xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-sm font-semibold flex items-center gap-2 border border-stone-700 active:scale-95 transition-all cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5 text-emerald-400" />
-            <span>Exit Kiosk Mode</span>
+            <span>{t.kiosk.exitKiosk}</span>
           </button>
           
           <div>
@@ -95,24 +107,25 @@ export const KioskMode: React.FC<KioskModeProps> = ({
               Interactive Park Terminal #04 · Main Visitor Arrival Plaza
             </div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-              Gardens by the Bay Touch Concierge
+              {t.kiosk.terminalTitle}
             </h1>
           </div>
         </div>
 
         {/* 4 Official Singapore National Languages */}
         <div className="flex items-center gap-1.5 bg-stone-900 p-1.5 rounded-2xl border border-stone-800">
-          {(['EN', '中文', 'Melayu', 'தமிழ்'] as const).map(lang => (
+          {languageButtons.map(({ code, label }) => (
             <button
-              key={lang}
-              onClick={() => setSelectedLanguage(lang)}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-                selectedLanguage === lang
+              key={code}
+              type="button"
+              onClick={() => onSelectLang(code)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                currentLang === code
                   ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-stone-400 hover:text-white'
+                  : 'text-stone-400 hover:text-white hover:bg-stone-800'
               }`}
             >
-              {lang}
+              {label}
             </button>
           ))}
         </div>
@@ -129,35 +142,40 @@ export const KioskMode: React.FC<KioskModeProps> = ({
             activeFilter={activeKioskFilter}
             onFilterChange={(f) => setActiveKioskFilter(f === 'amenity' || f === 'lake-nature' || f === 'outdoor-garden' ? 'all' : f)}
             isKioskMode={true}
+            currentLang={currentLang}
           />
         </div>
 
-        {/* Right 4 Cols: Quick Touch Destintations & QR Handoff */}
+        {/* Right 4 Cols: Quick Touch Destinations & QR Handoff */}
         <div className="lg:col-span-4 flex flex-col justify-between gap-6">
           {/* Quick 1-Touch Highlights */}
           <div className="bg-stone-900 p-5 rounded-3xl border border-stone-800 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold uppercase tracking-wider text-stone-300">
-                1-Touch Quick Directions
+                {t.kiosk.quickDirections}
               </h2>
-              <span className="text-xs text-emerald-400 font-semibold">Touch to Locate</span>
+              <span className="text-xs text-emerald-400 font-semibold">{t.kiosk.touchToLocate}</span>
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
               {quickDestinations.map(dest => {
                 const attraction = ATTRACTIONS_DATA.find(a => a.id === dest.id);
+                const locName = attraction ? (t.attractionNames[dest.id]?.name || attraction.name) : '';
+                const locSub = attraction ? (t.attractionNames[dest.id]?.categoryLabel || attraction.categoryLabel) : '';
+                
                 return (
                   <button
                     key={dest.id}
+                    type="button"
                     onClick={() => {
                       if (attraction) onSelectAttraction(attraction);
                     }}
-                    className="p-3.5 rounded-2xl bg-stone-800 hover:bg-stone-700 active:scale-95 border border-stone-700/80 text-left transition-all flex flex-col justify-between min-h-[78px]"
+                    className="p-3.5 rounded-2xl bg-stone-800 hover:bg-stone-700 active:scale-95 border border-stone-700/80 text-left transition-all flex flex-col justify-between min-h-[82px] cursor-pointer"
                   >
                     <div className="text-xl mb-1">{dest.icon}</div>
                     <div>
-                      <div className="text-xs font-bold text-white line-clamp-1">{dest.label}</div>
-                      <div className="text-[10px] text-stone-400">{dest.sub}</div>
+                      <div className="text-xs font-bold text-white line-clamp-1">{locName}</div>
+                      <div className="text-[10px] text-stone-400 line-clamp-1">{locSub}</div>
                     </div>
                   </button>
                 );
@@ -182,13 +200,13 @@ export const KioskMode: React.FC<KioskModeProps> = ({
             <div className="space-y-1.5">
               <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
                 <QrCode className="w-4 h-4" />
-                <span>Take Map On Mobile</span>
+                <span>{t.kiosk.takeOnMobile}</span>
               </div>
               <h3 className="text-sm font-bold text-white">
-                Scan With Phone Camera
+                {t.kiosk.scanWithCamera}
               </h3>
               <p className="text-[11px] text-stone-400 leading-relaxed">
-                Continue with live walking directions, audio guides, and opening hours directly on your smartphone.
+                {t.kiosk.scanHint}
               </p>
             </div>
           </div>
@@ -198,7 +216,7 @@ export const KioskMode: React.FC<KioskModeProps> = ({
             <div className="flex items-center gap-2.5">
               <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
               <span>
-                <strong>Next Light Show:</strong> Garden Rhapsody at 7:45 PM & 8:45 PM
+                <strong>Garden Rhapsody:</strong> 7:45 PM & 8:45 PM Daily
               </span>
             </div>
             <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded-md font-semibold">
@@ -219,7 +237,7 @@ export const KioskMode: React.FC<KioskModeProps> = ({
         </div>
 
         <div className="text-[11px] text-stone-500">
-          StratAgile AI Transformation Visitor Intelligence System
+          Gardens by the Bay Digital Visitor Experience
         </div>
       </footer>
 
@@ -228,18 +246,19 @@ export const KioskMode: React.FC<KioskModeProps> = ({
         <div className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-stone-900 border border-stone-700 p-8 rounded-3xl max-w-sm text-center space-y-4 shadow-2xl">
             <Clock className="w-12 h-12 text-amber-400 mx-auto animate-bounce" />
-            <h3 className="text-lg font-bold text-white">Still using this kiosk?</h3>
+            <h3 className="text-lg font-bold text-white">{t.kiosk.idleTitle}</h3>
             <p className="text-xs text-stone-400">
-              The screen will reset for the next visitor shortly. Touch anywhere to keep exploring.
+              {t.kiosk.idleText}
             </p>
             <button
+              type="button"
               onClick={() => {
                 setIdleSeconds(0);
                 setShowIdleWarning(false);
               }}
-              className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-md"
+              className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-md cursor-pointer"
             >
-              Continue Exploring
+              {t.kiosk.continueExploring}
             </button>
           </div>
         </div>

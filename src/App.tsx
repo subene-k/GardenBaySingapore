@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Compass, MapPin, Footprints, Info, Sparkles, 
   Smartphone, Monitor, Check, QrCode, ArrowRight, X
 } from 'lucide-react';
 import { Attraction, AttractionCategory } from './types/gardens';
 import { ATTRACTIONS_DATA } from './data/attractions';
+import { SupportedLanguage, TRANSLATIONS } from './data/translations';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { ExploreLanding } from './components/ExploreLanding';
@@ -21,20 +22,44 @@ import { AttractionDrawer } from './components/AttractionDrawer';
 import { KioskMode } from './components/KioskMode';
 import { QrShareModal } from './components/QrShareModal';
 
+type AppTab = 'explore' | 'map' | 'attractions' | 'itinerary' | 'info' | 'kiosk';
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'explore' | 'map' | 'attractions' | 'itinerary' | 'info' | 'kiosk'>('explore');
+  const [activeTab, setActiveTab] = useState<AppTab>('explore');
   const [selectedAttraction, setSelectedAttraction] = useState<Attraction | null>(null);
   const [itineraryAttractionIds, setItineraryAttractionIds] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('gtb_itinerary');
       if (saved) return JSON.parse(saved);
     } catch (e) {}
-    // Default initial itinerary: Flower Dome, Cloud Forest, Supertree Grove
     return ['flower-dome', 'cloud-forest', 'supertree-grove'];
   });
   const [activeFilter, setActiveFilter] = useState<AttractionCategory | 'all'>('all');
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [syncToastMessage, setSyncToastMessage] = useState<string | null>(null);
+
+  // Global Language state (supports 'en', 'zh', 'ms', 'ta')
+  const [currentLang, setCurrentLang] = useState<SupportedLanguage>(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlLang = params.get('lang') as SupportedLanguage;
+      if (urlLang && ['en', 'zh', 'ms', 'ta'].includes(urlLang)) return urlLang;
+      const savedLang = localStorage.getItem('gtb_lang') as SupportedLanguage;
+      if (savedLang && ['en', 'zh', 'ms', 'ta'].includes(savedLang)) return savedLang;
+    } catch (e) {}
+    return 'en';
+  });
+
+  const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+
+  // Persist language
+  const handleSelectLang = (lang: SupportedLanguage) => {
+    setCurrentLang(lang);
+    try {
+      localStorage.setItem('gtb_lang', lang);
+    } catch (e) {}
+    syncUrl(activeTab, selectedAttraction ? selectedAttraction.id : null, lang);
+  };
 
   // Sync itinerary changes to localStorage
   useEffect(() => {
@@ -43,18 +68,94 @@ export default function App() {
     } catch (e) {}
   }, [itineraryAttractionIds]);
 
-  // Parse URL search parameters on mount (QR continuation support!)
+  // Sync URL function for deep linking and history state
+  const syncUrl = useCallback((tab: AppTab, locId: string | null, lang: SupportedLanguage, push: boolean = true) => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    params.set('tab', tab);
+    params.set('lang', lang);
+    if (locId) {
+      params.set('loc', locId);
+    } else {
+      params.delete('loc');
+    }
+    if (itineraryAttractionIds.length > 0) {
+      params.set('itinerary', itineraryAttractionIds.join(','));
+    }
+
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    const state = { tab, locId, lang };
+    
+    if (push) {
+      window.history.pushState(state, '', newUrl);
+    } else {
+      window.history.replaceState(state, '', newUrl);
+    }
+  }, [itineraryAttractionIds]);
+
+  // Navigate tab with browser history push
+  const handleNavigateTab = (tab: AppTab) => {
+    setActiveTab(tab);
+    syncUrl(tab, selectedAttraction ? selectedAttraction.id : null, currentLang, true);
+  };
+
+  // Select attraction with browser history push
+  const handleSelectAttraction = (attraction: Attraction | null) => {
+    setSelectedAttraction(attraction);
+    syncUrl(activeTab, attraction ? attraction.id : null, currentLang, true);
+  };
+
+  // Close drawer
+  const handleCloseDrawer = () => {
+    setSelectedAttraction(null);
+    syncUrl(activeTab, null, currentLang, true);
+  };
+
+  // Browser Back/Forward navigation listener (popstate)
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = (params.get('tab') as AppTab) || 'explore';
+      const locParam = params.get('loc');
+      const langParam = params.get('lang') as SupportedLanguage;
+
+      if (['explore', 'map', 'attractions', 'itinerary', 'info', 'kiosk'].includes(tabParam)) {
+        setActiveTab(tabParam);
+      }
+
+      if (locParam) {
+        const found = ATTRACTIONS_DATA.find(a => a.id === locParam);
+        setSelectedAttraction(found || null);
+      } else {
+        setSelectedAttraction(null);
+      }
+
+      if (langParam && ['en', 'zh', 'ms', 'ta'].includes(langParam)) {
+        setCurrentLang(langParam);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Parse URL search parameters on initial mount
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     
+    // Check initial tab
+    const tabParam = params.get('tab') as AppTab;
+    if (tabParam && ['explore', 'map', 'attractions', 'itinerary', 'info', 'kiosk'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+
     // Check for synced itinerary
     const itineraryParam = params.get('itinerary');
     if (itineraryParam) {
       const ids = itineraryParam.split(',').filter(id => ATTRACTIONS_DATA.some(a => a.id === id));
       if (ids.length > 0) {
         setItineraryAttractionIds(ids);
-        setSyncToastMessage(`Cross-Device Session Synchronised: Loaded ${ids.length} stops in your itinerary`);
       }
     }
 
@@ -64,16 +165,14 @@ export default function App() {
       const found = ATTRACTIONS_DATA.find(a => a.id === locParam);
       if (found) {
         setSelectedAttraction(found);
-        setActiveTab('map');
+        if (!tabParam) setActiveTab('map');
       }
     }
 
     // Check for source
     const srcParam = params.get('src');
     if (srcParam === 'qr_continuation' || srcParam === 'kiosk_station_1') {
-      if (!syncToastMessage) {
-        setSyncToastMessage('Welcome to Gardens by the Bay! Your mobile guide is live.');
-      }
+      setSyncToastMessage('Mobile Session Synchronised: Your itinerary and interactive map are ready.');
     }
   }, []);
 
@@ -88,11 +187,8 @@ export default function App() {
   // Toggle stop in itinerary
   const handleToggleItinerary = (id: string) => {
     setItineraryAttractionIds(prev => {
-      if (prev.includes(id)) {
-        return prev.filter(item => item !== id);
-      } else {
-        return [...prev, id];
-      }
+      const next = prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id];
+      return next;
     });
   };
 
@@ -101,19 +197,22 @@ export default function App() {
     return (
       <div className="min-h-screen bg-stone-950">
         <KioskMode
-          onExitKiosk={() => setActiveTab('explore')}
+          onExitKiosk={() => handleNavigateTab('explore')}
           onSelectAttraction={(attraction) => {
-            setSelectedAttraction(attraction);
+            handleSelectAttraction(attraction);
           }}
           itineraryAttractionIds={itineraryAttractionIds}
+          currentLang={currentLang}
+          onSelectLang={handleSelectLang}
         />
-        {/* Attraction Drawer in Kiosk */}
+        {/* Central Attraction Drawer */}
         <AttractionDrawer
           attraction={selectedAttraction}
-          onClose={() => setSelectedAttraction(null)}
-          onSelectAttraction={(a) => setSelectedAttraction(a)}
+          onClose={handleCloseDrawer}
+          onSelectAttraction={handleSelectAttraction}
           isInItinerary={selectedAttraction ? itineraryAttractionIds.includes(selectedAttraction.id) : false}
           onToggleItinerary={handleToggleItinerary}
+          currentLang={currentLang}
         />
       </div>
     );
@@ -130,8 +229,9 @@ export default function App() {
               <span>{syncToastMessage}</span>
             </div>
             <button 
+              type="button"
               onClick={() => setSyncToastMessage(null)}
-              className="text-emerald-200 hover:text-white"
+              className="text-emerald-200 hover:text-white cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -143,11 +243,13 @@ export default function App() {
       <Header
         activeTab={activeTab}
         onNavigateTab={(tab) => {
-          setActiveTab(tab);
+          handleNavigateTab(tab);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
         itineraryCount={itineraryAttractionIds.length}
         onOpenQrModal={() => setIsQrModalOpen(true)}
+        currentLang={currentLang}
+        onSelectLang={handleSelectLang}
       />
 
       {/* Main Content Area */}
@@ -155,13 +257,12 @@ export default function App() {
         {activeTab === 'explore' && (
           <ExploreLanding
             onNavigateTab={(tab) => {
-              setActiveTab(tab);
+              handleNavigateTab(tab);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            onSelectAttraction={(attraction) => {
-              setSelectedAttraction(attraction);
-            }}
+            onSelectAttraction={handleSelectAttraction}
             onOpenQrModal={() => setIsQrModalOpen(true)}
+            currentLang={currentLang}
           />
         )}
 
@@ -169,28 +270,26 @@ export default function App() {
           <div className="h-[calc(100vh-4rem)] w-full p-2 sm:p-4 max-w-[1700px] mx-auto">
             <InteractiveMap
               selectedAttractionId={selectedAttraction ? selectedAttraction.id : null}
-              onSelectAttraction={(attraction) => {
-                setSelectedAttraction(attraction);
-              }}
+              onSelectAttraction={handleSelectAttraction}
               itineraryAttractionIds={itineraryAttractionIds}
               activeFilter={activeFilter}
               onFilterChange={(filter) => setActiveFilter(filter)}
-              onNavigateToAttractionTab={() => setActiveTab('attractions')}
+              onNavigateToAttractionTab={() => handleNavigateTab('attractions')}
+              currentLang={currentLang}
             />
           </div>
         )}
 
         {activeTab === 'attractions' && (
           <AttractionsList
-            onSelectAttraction={(attraction) => {
-              setSelectedAttraction(attraction);
-            }}
+            onSelectAttraction={handleSelectAttraction}
             itineraryAttractionIds={itineraryAttractionIds}
             onToggleItinerary={handleToggleItinerary}
             onNavigateToMapWithAttraction={(attraction) => {
-              setSelectedAttraction(attraction);
-              setActiveTab('map');
+              handleSelectAttraction(attraction);
+              handleNavigateTab('map');
             }}
+            currentLang={currentLang}
           />
         )}
 
@@ -198,12 +297,10 @@ export default function App() {
           <ItineraryPlanner
             itineraryAttractionIds={itineraryAttractionIds}
             onSetItinerary={(ids) => setItineraryAttractionIds(ids)}
-            onSelectAttraction={(attraction) => {
-              setSelectedAttraction(attraction);
-            }}
+            onSelectAttraction={handleSelectAttraction}
             onOpenQrModal={() => setIsQrModalOpen(true)}
             onNavigateToMap={() => {
-              setActiveTab('map');
+              handleNavigateTab('map');
             }}
           />
         )}
@@ -217,10 +314,11 @@ export default function App() {
       {activeTab !== 'map' && (
         <Footer
           onNavigateTab={(tab) => {
-            setActiveTab(tab);
+            handleNavigateTab(tab);
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
           onOpenQrModal={() => setIsQrModalOpen(true)}
+          currentLang={currentLang}
         />
       )}
 
@@ -230,43 +328,47 @@ export default function App() {
         style={{ maxHeight: '60px' }}
       >
         <button
-          onClick={() => { setActiveTab('explore'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          className={`flex flex-col items-center gap-0.5 py-1 px-2 text-[10px] font-semibold transition-colors ${
+          type="button"
+          onClick={() => { handleNavigateTab('explore'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 text-[10px] font-semibold transition-colors cursor-pointer ${
             activeTab === 'explore' ? 'text-emerald-800 dark:text-emerald-400' : 'text-stone-500'
           }`}
         >
           <Sparkles className="w-4 h-4" />
-          <span>Explore</span>
+          <span>{t.nav.explore}</span>
         </button>
 
         <button
-          onClick={() => setActiveTab('map')}
-          className={`flex flex-col items-center gap-0.5 py-1 px-2 text-[10px] font-semibold transition-colors ${
+          type="button"
+          onClick={() => handleNavigateTab('map')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 text-[10px] font-semibold transition-colors cursor-pointer ${
             activeTab === 'map' ? 'text-emerald-800 dark:text-emerald-400' : 'text-stone-500'
           }`}
         >
           <Compass className="w-4 h-4" />
-          <span>Map</span>
+          <span>{t.nav.map}</span>
         </button>
 
         <button
-          onClick={() => { setActiveTab('attractions'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          className={`flex flex-col items-center gap-0.5 py-1 px-2 text-[10px] font-semibold transition-colors ${
+          type="button"
+          onClick={() => { handleNavigateTab('attractions'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 text-[10px] font-semibold transition-colors cursor-pointer ${
             activeTab === 'attractions' ? 'text-emerald-800 dark:text-emerald-400' : 'text-stone-500'
           }`}
         >
           <MapPin className="w-4 h-4" />
-          <span>Sights</span>
+          <span>{t.nav.attractions}</span>
         </button>
 
         <button
-          onClick={() => { setActiveTab('itinerary'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          className={`relative flex flex-col items-center gap-0.5 py-1 px-2 text-[10px] font-semibold transition-colors ${
+          type="button"
+          onClick={() => { handleNavigateTab('itinerary'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className={`relative flex flex-col items-center gap-0.5 py-1 px-2 text-[10px] font-semibold transition-colors cursor-pointer ${
             activeTab === 'itinerary' ? 'text-emerald-800 dark:text-emerald-400' : 'text-stone-500'
           }`}
         >
           <Footprints className="w-4 h-4" />
-          <span>Plan</span>
+          <span>{t.nav.itinerary}</span>
           {itineraryAttractionIds.length > 0 && (
             <span className="absolute top-0 right-1 w-4 h-4 rounded-full bg-emerald-700 text-white text-[9px] font-bold flex items-center justify-center">
               {itineraryAttractionIds.length}
@@ -275,28 +377,28 @@ export default function App() {
         </button>
 
         <button
-          onClick={() => { setActiveTab('info'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          className={`flex flex-col items-center gap-0.5 py-1 px-2 text-[10px] font-semibold transition-colors ${
+          type="button"
+          onClick={() => { handleNavigateTab('info'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 text-[10px] font-semibold transition-colors cursor-pointer ${
             activeTab === 'info' ? 'text-emerald-800 dark:text-emerald-400' : 'text-stone-500'
           }`}
         >
           <Info className="w-4 h-4" />
-          <span>Info</span>
+          <span>{t.nav.info}</span>
         </button>
       </nav>
 
-      {/* Global Attraction Detail Drawer */}
+      {/* Central Global Attraction Detail Drawer */}
       <AttractionDrawer
         attraction={selectedAttraction}
-        onClose={() => setSelectedAttraction(null)}
-        onSelectAttraction={(attraction) => {
-          setSelectedAttraction(attraction);
-        }}
+        onClose={handleCloseDrawer}
+        onSelectAttraction={handleSelectAttraction}
         isInItinerary={selectedAttraction ? itineraryAttractionIds.includes(selectedAttraction.id) : false}
         onToggleItinerary={handleToggleItinerary}
         onNavigateToMap={() => {
-          setActiveTab('map');
+          handleNavigateTab('map');
         }}
+        currentLang={currentLang}
       />
 
       {/* Cross-Device QR Continuation Modal */}

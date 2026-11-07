@@ -1,11 +1,19 @@
 import { Attraction, Facility, CuratedItinerary } from '../types/gardens';
 
-export const ASSET_MAP_IMAGE = '/src/assets/images/illustrated_gardens_map_1794030377958.jpg';
-export const ASSET_HERO_IMAGE = '/src/assets/images/hero_gardens_conservatory_1794030378866.jpg';
-export const ASSET_FLOWER_DOME = '/src/assets/images/flower_dome_interior_1794030379074.jpg';
-export const ASSET_CLOUD_FOREST = '/src/assets/images/cloud_forest_waterfall_1794030381305.jpg';
-export const ASSET_SUPERTREE = '/src/assets/images/supertree_grove_night_1794030381267.jpg';
-export const ASSET_FLORAL_FANTASY = '/src/assets/images/floral_fantasy_showcase_1794030380351.jpg';
+// Direct ES Module imports so Vite bundles and hashes them into /dist without 404s
+import mapImg from '../assets/images/illustrated_gardens_map_1794030377958.jpg';
+import heroImg from '../assets/images/hero_gardens_conservatory_1794030378866.jpg';
+import flowerDomeImg from '../assets/images/flower_dome_interior_1794030379074.jpg';
+import cloudForestImg from '../assets/images/cloud_forest_waterfall_1794030381305.jpg';
+import supertreeImg from '../assets/images/supertree_grove_night_1794030381267.jpg';
+import floralFantasyImg from '../assets/images/floral_fantasy_showcase_1794030380351.jpg';
+
+export const ASSET_MAP_IMAGE = mapImg;
+export const ASSET_HERO_IMAGE = heroImg;
+export const ASSET_FLOWER_DOME = flowerDomeImg;
+export const ASSET_CLOUD_FOREST = cloudForestImg;
+export const ASSET_SUPERTREE = supertreeImg;
+export const ASSET_FLORAL_FANTASY = floralFantasyImg;
 
 export const ATTRACTIONS_DATA: Attraction[] = [
   {
@@ -14,7 +22,7 @@ export const ATTRACTIONS_DATA: Attraction[] = [
     subtitle: 'The World’s Largest Glass Greenhouse',
     category: 'conservatory',
     categoryLabel: 'Cooled Conservatory',
-    description: 'Guinness World Record largest glass greenhouse, replicating the cool-dry Mediterranean and semi-arid climates with nine distinct gardens.',
+    description: 'Guinness World Record largest glass greenhouse, replicating cool-dry Mediterranean and semi-arid climates with nine distinct floral gardens.',
     longDescription: 'Spanning 1.28 hectares under an unsupported columnless glass grid-shell, Flower Dome houses exotic plants from five continents. Explore the Olive Grove with thousand-year-old olive trees, the dramatic Succulent Garden, Australian and Californian gardens, and the vibrant Flower Field featuring rotating seasonal floral extravaganzas like Tulipmania and Orchid Haven.',
     image: ASSET_FLOWER_DOME,
     hours: 'Daily: 9:00 AM – 9:00 PM (Last admission 8:30 PM)',
@@ -24,17 +32,17 @@ export const ATTRACTIONS_DATA: Attraction[] = [
     durationLabel: '60 – 90 mins',
     indoor: true,
     temperature: '23°C – 25°C',
-    coordinates: { x: 67.5, y: 19.5 },
+    coordinates: { x: 66.0, y: 18.5 },
     officialUrl: 'https://www.gardensbythebay.com.sg/en/things-to-do/attractions/flower-dome.html',
     highlights: [
-      'Guinness World Records 2015 largest glass greenhouse (1.28 hectares)',
+      'Guinness World Records largest glass greenhouse (1.28 hectares)',
       'Changing floral displays in the central Flower Field',
       'Over 30,000 plants representing 150+ species',
       'Ancient Mediterranean olive trees over 1,000 years old'
     ],
     visitorTips: [
       'Bring a light cardigan as temperatures are maintained between 23°C–25°C.',
-      'Best visited during midday to escape tropical heat or at twilight for evening ambient illumination.'
+      'Best visited midday to escape tropical heat or at twilight for ambient evening illumination.'
     ],
     nearestStation: 'Gardens by the Bay MRT (TE22, Exit 1) or Bayfront MRT Shuttle Stop',
     accessibility: ['Wheelchair Accessible', 'Stroller Friendly', 'Sensory Plant Tactile Areas'],
@@ -46,7 +54,7 @@ export const ATTRACTIONS_DATA: Attraction[] = [
     subtitle: 'A Misty 35-Metre Mountain & Indoor Waterfall',
     category: 'conservatory',
     categoryLabel: 'Cooled Conservatory',
-    description: 'A 35-metre tall mountain veiled in mist with one of the world’s tallest indoor waterfalls, showcasing highland tropical montane biodiversity.',
+    description: 'A 35-metre tall mountain veiled in mist with one of the world’s tallest indoor waterfalls, showcasing tropical highland biodiversity.',
     longDescription: 'Step into a mystical misty world where high-altitude orchids, pitcher plants, and delicate ferns cling to a living vertical mountain. Ride the elevator to the Lost World at the summit, then descend along the cantilevered Cloud Walk and Treetop Walk suspended high above the forest canopy with views of Marina Bay.',
     image: ASSET_CLOUD_FOREST,
     hours: 'Daily: 9:00 AM – 9:00 PM (Last admission 8:30 PM)',
@@ -56,7 +64,7 @@ export const ATTRACTIONS_DATA: Attraction[] = [
     durationLabel: '60 – 90 mins',
     indoor: true,
     temperature: '23°C – 25°C',
-    coordinates: { x: 86.0, y: 34.0 },
+    coordinates: { x: 84.0, y: 33.0 },
     officialUrl: 'https://www.gardensbythebay.com.sg/en/things-to-do/attractions/cloud-forest.html',
     highlights: [
       'Dramatic 35-meter indoor cascading waterfall',
@@ -65,7 +73,7 @@ export const ATTRACTIONS_DATA: Attraction[] = [
       'Misting hours every 2 hours: 10am, 12pm, 2pm, 4pm, 6pm, 8pm'
     ],
     visitorTips: [
-      'Time your visit with misting times (every even hour) for magical photographic opportunities.',
+      'Time your visit with misting times (every even hour) for magical photography.',
       'Paved accessible walkways allow seamless wheelchair and stroller transit.'
     ],
     nearestStation: 'Gardens by the Bay MRT (TE22, Exit 1)',
@@ -78,16 +86,16 @@ export const ATTRACTIONS_DATA: Attraction[] = [
     subtitle: 'Futuristic Vertical Gardens & Light Spectacle',
     category: 'supertree',
     categoryLabel: 'Supertree & Aerial',
-    description: 'Iconic 25 to 50-metre vertical botanical giants embedded with over 162,900 plants, home to the daily Garden Rhapsody light show.',
-    longDescription: 'The heart of Gardens by the Bay, Supertree Grove features 12 towering vertical gardens that act as cooling ducts for the conservatories and harness solar energy. By day they provide shaded promenades; by night they come alive with vibrant colors choreographed to music in the complimentary Garden Rhapsody spectacle.',
+    description: '12 vertical tree towers in the central Grove (part of 18 Supertrees across the Gardens), home to the daily Garden Rhapsody light show.',
+    longDescription: 'The heart of Gardens by the Bay, Supertree Grove features 12 towering vertical gardens (among 18 Supertrees across the park) that act as cooling ducts for the conservatories and harness solar energy. By day they provide shaded promenades; by night they come alive with vibrant colors choreographed to music in the complimentary Garden Rhapsody spectacle.',
     image: ASSET_SUPERTREE,
     hours: 'Outdoor Grounds: Daily 5:00 AM – 2:00 AM (Free access)',
     admission: 'Free Access',
-    priceNote: 'Outdoor Grove is free. Garden Rhapsody light show is free.',
+    priceNote: 'Outdoor Grove & Garden Rhapsody light show are completely free. Skyway & Observatory are ticketed.',
     durationMinutes: 45,
     durationLabel: '45 – 60 mins',
     indoor: false,
-    coordinates: { x: 65.0, y: 44.0 },
+    coordinates: { x: 65.0, y: 46.0 },
     officialUrl: 'https://www.gardensbythebay.com.sg/en/things-to-do/attractions/supertree-grove.html',
     highlights: [
       'Free Garden Rhapsody Light & Sound Show: Daily at 7:45 PM & 8:45 PM',
@@ -97,7 +105,7 @@ export const ATTRACTIONS_DATA: Attraction[] = [
     ],
     visitorTips: [
       'Arrive 15–20 minutes before the 7:45 PM or 8:45 PM show to secure a comfortable lawn spot.',
-      'Lying down on the circular benches provides an immersive optical view of the illuminated canopy.'
+      'Lying down on the circular benches provides an immersive view of the illuminated canopy.'
     ],
     nearestStation: 'Gardens by the Bay MRT (TE22, Exit 1) or Bayfront MRT (CE1/DT16)',
     accessibility: ['Wheelchair Accessible Plaza', 'Paved Smooth Pathways'],
@@ -114,11 +122,11 @@ export const ATTRACTIONS_DATA: Attraction[] = [
     image: ASSET_SUPERTREE,
     hours: 'Daily: 9:00 AM – 9:00 PM (Last admission 8:30 PM)',
     admission: 'Ticketed',
-    priceNote: 'Standard: SGD 14 (Adult) / SGD 10 (Child)',
+    priceNote: 'Standard: SGD 14 (Adult) / SGD 10 (Child 3-12)',
     durationMinutes: 25,
     durationLabel: '20 – 30 mins',
     indoor: false,
-    coordinates: { x: 53.5, y: 32.5 },
+    coordinates: { x: 53.0, y: 33.0 },
     officialUrl: 'https://www.gardensbythebay.com.sg/en/things-to-do/attractions/ocbc-skyway.html',
     highlights: [
       '128-metre aerial suspension bridge between Supertrees',
@@ -126,8 +134,8 @@ export const ATTRACTIONS_DATA: Attraction[] = [
       'Elevated views during golden hour sunset and night illuminations'
     ],
     visitorTips: [
-      'May be temporarily closed during lightning warnings for visitor safety.',
-      'Strollers are not allowed on the walkway due to width; stroller parking is available at the base.'
+      'May be temporarily paused during lightning warnings for visitor safety.',
+      'Strollers are parked at the ground lift lobby due to walkway width.'
     ],
     nearestStation: 'Gardens by the Bay MRT (TE22)',
     accessibility: ['Elevator Access Available', 'Assisted Wheelchair Access'],
@@ -144,11 +152,11 @@ export const ATTRACTIONS_DATA: Attraction[] = [
     image: ASSET_HERO_IMAGE,
     hours: 'Daily: 9:00 AM – 9:00 PM (Last admission 8:30 PM)',
     admission: 'Ticketed',
-    priceNote: 'Standard: SGD 14 (Adult) / SGD 10 (Child)',
+    priceNote: 'Standard: SGD 14 (Adult) / SGD 10 (Child 3-12)',
     durationMinutes: 35,
     durationLabel: '30 – 45 mins',
     indoor: true,
-    coordinates: { x: 63.5, y: 39.0 },
+    coordinates: { x: 62.0, y: 39.0 },
     officialUrl: 'https://www.gardensbythebay.com.sg/en/things-to-do/attractions/supertree-observatory.html',
     highlights: [
       'Highest vantage point in Gardens by the Bay (50 metres)',
@@ -168,18 +176,18 @@ export const ATTRACTIONS_DATA: Attraction[] = [
     name: 'Floral Fantasy',
     subtitle: 'Whimsical Floral Art & 4D Flight Ride',
     category: 'conservatory',
-    categoryLabel: 'Cooled Conservatory',
-    description: 'Four dreamlike garden landscapes featuring suspended bouquets, floral chandeliers, and the immersive 4D Flight of the Dragonfly ride.',
-    longDescription: 'Situated right by Bayfront MRT, Floral Fantasy blends horticultural artistry with fairytale whimsy across four garden chambers: Dance, Float, Waltz, and Drift. Marvel at thousands of preserved flowers tumbling from the ceiling, poison dart frogs in vivariums, and finish with a simulated flight through the gardens.',
+    categoryLabel: 'Floral Attraction',
+    description: 'Located at Bayfront Plaza (Bayfront MRT Exit B), featuring suspended bouquets, floral chandeliers, and the 4D Flight of the Dragonfly ride.',
+    longDescription: 'Situated at Bayfront Plaza right outside Bayfront MRT (CE1/DT16, Exit B underground linkway), Floral Fantasy blends horticultural artistry with fairytale whimsy across four garden chambers: Dance, Float, Waltz, and Drift. Marvel at thousands of preserved flowers tumbling from the ceiling, poison dart frogs in vivariums, and finish with a simulated flight through the gardens.',
     image: ASSET_FLORAL_FANTASY,
-    hours: 'Mon–Fri: 10:00 AM – 7:00 PM; Sat, Sun & PH: 10:00 AM – 8:00 PM',
+    hours: 'Mon–Fri: 10:00 AM – 7:00 PM (Last admission 6:30 PM); Sat, Sun & PH: 10:00 AM – 8:00 PM (Last admission 7:30 PM)',
     admission: 'Ticketed',
     priceNote: 'Standard: SGD 20 (Adult) / SGD 12 (Child)',
     durationMinutes: 45,
     durationLabel: '40 – 50 mins',
     indoor: true,
     temperature: '23°C – 25°C',
-    coordinates: { x: 41.5, y: 47.0 },
+    coordinates: { x: 41.5, y: 46.0 },
     officialUrl: 'https://www.gardensbythebay.com.sg/en/things-to-do/attractions/floral-fantasy.html',
     highlights: [
       'Four distinct floral themes: Dance, Float, Waltz, and Drift',
@@ -188,8 +196,8 @@ export const ATTRACTIONS_DATA: Attraction[] = [
       '4D multisensory Ride: Flight of the Dragonfly'
     ],
     visitorTips: [
-      'Located near Bayfront MRT Exit B—ideal as your very first or last stop.',
-      'Photography hotspot: look up to capture the undulating hanging garden waves.'
+      'Located directly at Bayfront MRT Exit B—ideal as your very first or last stop.',
+      'Photography hotspot: look up to capture undulating hanging flower waves.'
     ],
     nearestStation: 'Bayfront MRT (DT16/CE1, Exit B)',
     accessibility: ['Wheelchair Accessible', 'Stroller Friendly'],
@@ -204,13 +212,13 @@ export const ATTRACTIONS_DATA: Attraction[] = [
     description: 'Four themed gardens reflecting Singapore’s main ethnic groups and colonial history: Indian, Chinese, Malay, and Colonial Gardens.',
     longDescription: 'Discover the intimate ties between plants and Singapore’s multicultural heritage. The Indian Garden showcases sacred motifs, banyans, and Ayurvedic herbs; the Chinese Garden honors scholar aesthetics with penjing rocks and bamboo; the Malay Garden celebrates traditional kampong village subsistence plants; and the Colonial Garden recounts the spice trade history of nutmeg, rubber, and cloves.',
     image: ASSET_HERO_IMAGE,
-    hours: 'Daily: 5:00 AM – 2:00 AM',
+    hours: 'Daily: 5:00 AM – 2:00 AM (Free access)',
     admission: 'Free Access',
     priceNote: 'Free admission for all visitors',
     durationMinutes: 40,
     durationLabel: '30 – 45 mins',
     indoor: false,
-    coordinates: { x: 29.5, y: 53.0 },
+    coordinates: { x: 29.0, y: 53.0 },
     officialUrl: 'https://www.gardensbythebay.com.sg/en/things-to-do/attractions/heritage-gardens.html',
     highlights: [
       'Indian Garden: Sacred banyan trees and floral kolam patterns',
@@ -228,20 +236,20 @@ export const ATTRACTIONS_DATA: Attraction[] = [
   },
   {
     id: 'dragonfly-lake',
-    name: 'Dragonfly Lake & Kingfisher Lake',
+    name: 'Dragonfly & Kingfisher Lakes',
     subtitle: 'Living Eco-Lake & 440-Metre Scenic Boardwalk',
     category: 'lake-nature',
     categoryLabel: 'Lakes & Nature',
     description: 'A rich aquatic sanctuary acting as a natural eco-filtration system for park runoff, bordered by a picturesque wooden boardwalk.',
     longDescription: 'These twin lakes are not only scenic waterways reflecting the Supertrees and skyline, but also a living ecosystem. Aquatic reedbeds and floating wetland islands naturally cleanse stormwater runoff before it enters the Marina Reservoir. Stroll along the 440-metre Dragonfly Bridge and boardwalk to spot monitor lizards, kingfishers, and iridescent dragonflies.',
     image: ASSET_HERO_IMAGE,
-    hours: 'Daily: 5:00 AM – 2:00 AM',
+    hours: 'Daily: 5:00 AM – 2:00 AM (Free access)',
     admission: 'Free Access',
     priceNote: 'Free admission for all visitors',
     durationMinutes: 30,
     durationLabel: '25 – 35 mins',
     indoor: false,
-    coordinates: { x: 34.0, y: 77.0 },
+    coordinates: { x: 34.0, y: 76.0 },
     officialUrl: 'https://www.gardensbythebay.com.sg/en/things-to-do/attractions/dragonfly-and-kingfisher-lakes.html',
     highlights: [
       '440-metre lakeside boardwalk with panoramic reflections',
@@ -266,13 +274,13 @@ export const ATTRACTIONS_DATA: Attraction[] = [
     description: 'An interactive water play park with motion-activated fountain nozzles, rainforest treehouses, and adventure play trails for kids.',
     longDescription: 'Designed for children aged 1 to 12, this vibrant sanctuary features a 0.5-hectare interactive Water Play area where synchronized jets dance to lively children’s music. A separate Toddler Play Zone provides safe gentle sprays, while older kids can climb two 7.5-meter rainforest treehouses connected by climbing rope bridges in the jungle canopy.',
     image: ASSET_HERO_IMAGE,
-    hours: 'Thu–Sun & PH: 9:00 AM – 7:00 PM (Water play closes at 6:30 PM). Closed Mon–Wed.',
+    hours: 'Thu–Sun & PH: 9:00 AM – 7:00 PM (Water play closes at 6:30 PM). Closed Mon–Wed for weekly maintenance.',
     admission: 'Free Access',
-    priceNote: 'Free admission (Swimwear required for water play)',
+    priceNote: 'Free admission (Swimwear required for water play fountains)',
     durationMinutes: 90,
     durationLabel: '60 – 120 mins',
     indoor: false,
-    coordinates: { x: 8.5, y: 88.0 },
+    coordinates: { x: 9.5, y: 88.0 },
     officialUrl: 'https://www.gardensbythebay.com.sg/en/things-to-do/attractions/far-east-organization-childrens-garden.html',
     highlights: [
       'Hydro-vault water sprays synchronized with sound sensors',
@@ -297,13 +305,13 @@ export const ATTRACTIONS_DATA: Attraction[] = [
     description: 'A 2-hectare minimalist Japanese rock garden featuring bamboo groves, cascading streams, and 160 rocks sourced from Niyodo, Japan.',
     longDescription: 'Created in collaboration with renowned Japanese landscape designer Jun-ichi Inada, Serene Garden offers an oasis of quiet contemplation. Meander past weeping bamboo groves, podocarpus trees, a cascading natural waterfall, and granite stone formations that evoke the gentle rhythm of mountain streams.',
     image: ASSET_HERO_IMAGE,
-    hours: 'Daily: 5:00 AM – 2:00 AM',
+    hours: 'Daily: 5:00 AM – 2:00 AM (Free access)',
     admission: 'Free Access',
     priceNote: 'Free admission for all visitors',
     durationMinutes: 25,
     durationLabel: '20 – 30 mins',
     indoor: false,
-    coordinates: { x: 58.0, y: 24.0 },
+    coordinates: { x: 57.0, y: 19.0 },
     officialUrl: 'https://www.gardensbythebay.com.sg/en/things-to-do/attractions/serene-garden.html',
     highlights: [
       '160 authentic blue rocks hand-selected from Niyodo River, Shikoku',
@@ -328,13 +336,13 @@ export const ATTRACTIONS_DATA: Attraction[] = [
     description: 'A 22,000-square-metre natural grass amphitheatre that accommodates up to 30,000 people for picnics, festivals, and music concerts.',
     longDescription: 'Surrounded by panoramic views of the conservatories and Marina Bay Sands, The Meadow is Singapore’s premier outdoor venue. On ordinary days it is a relaxing green pasture perfect for evening kite-flying, family picnics, and stargazing.',
     image: ASSET_HERO_IMAGE,
-    hours: 'Daily: 5:00 AM – 2:00 AM',
+    hours: 'Daily: 5:00 AM – 2:00 AM (Free access)',
     admission: 'Free Access',
     priceNote: 'Free access on non-event days',
     durationMinutes: 30,
     durationLabel: '20 – 40 mins',
     indoor: false,
-    coordinates: { x: 39.5, y: 32.0 },
+    coordinates: { x: 39.0, y: 31.0 },
     officialUrl: 'https://www.gardensbythebay.com.sg/en/things-to-do/attractions/the-meadow.html',
     highlights: [
       'Sprawling 22,000 sqm green lawn with unobstructed city skyline views',
@@ -358,7 +366,7 @@ export const ATTRACTIONS_DATA: Attraction[] = [
     description: 'An open-air sheltered desert pavilion featuring more than 1,000 desert plants across 100 arid species from the Americas and Africa.',
     longDescription: 'Experience the marvels of plant adaptation in harsh arid climates. The Sun Pavilion shelters an incredible variety of cacti and succulents, including Mexican giant cardon cacti towering up to several meters, the whimsical Turk’s Cap, and spherical golden barrel cacti.',
     image: ASSET_FLOWER_DOME,
-    hours: 'Daily: 9:00 AM – 9:00 PM',
+    hours: 'Daily: 9:00 AM – 9:00 PM (Free access)',
     admission: 'Free Access',
     priceNote: 'Free admission for all visitors',
     durationMinutes: 20,
@@ -388,7 +396,7 @@ export const ATTRACTIONS_DATA: Attraction[] = [
     description: 'A 15,000-square-metre revitalised freshwater sanctuary harboring native mangrove species, otters, and bird lookout points.',
     longDescription: 'A biodiversity haven linking the main gardens with Marina Channel. Featuring more than 200 true mangrove and mangrove-associate trees, this wetland cleanses water through natural aeration cascades and provides a tranquil home for smooth-coated otters, white-breasted waterhens, and migratory kingfishers.',
     image: ASSET_HERO_IMAGE,
-    hours: 'Daily: 5:00 AM – 2:00 AM',
+    hours: 'Daily: 5:00 AM – 2:00 AM (Free access)',
     admission: 'Free Access',
     priceNote: 'Free admission for all visitors',
     durationMinutes: 30,
@@ -418,13 +426,13 @@ export const ATTRACTIONS_DATA: Attraction[] = [
     description: 'Three majestic golden-hued Supertrees greeting visitors arriving from Marina Bay Sands and the Central Arrival Plaza.',
     longDescription: 'Named for the golden-flowered trees and foliage that surround it, Golden Garden features three towering Supertrees that act as prominent landmark beacons. It connects the overhead Lion Bridge from Marina Bay Sands directly into the heart of Gardens by the Bay.',
     image: ASSET_HERO_IMAGE,
-    hours: 'Daily: 5:00 AM – 2:00 AM',
+    hours: 'Daily: 5:00 AM – 2:00 AM (Free access)',
     admission: 'Free Access',
     priceNote: 'Free admission for all visitors',
     durationMinutes: 15,
     durationLabel: '10 – 15 mins',
     indoor: false,
-    coordinates: { x: 49.5, y: 25.0 },
+    coordinates: { x: 48.0, y: 24.0 },
     officialUrl: 'https://www.gardensbythebay.com.sg/en/things-to-do/attractions/golden-garden.html',
     highlights: [
       'Three towering Supertrees framing the Lion Bridge pedestrian gateway',
@@ -448,13 +456,13 @@ export const ATTRACTIONS_DATA: Attraction[] = [
     description: 'An open community space featuring outdoor fitness stations, musical playground instruments, a dog run, and community herb garden.',
     longDescription: 'Situated along the waterfront promenade overlooking the Marina Reservoir, Active Garden brings families and fitness enthusiasts together. It includes interactive musical play chimes, an all-inclusive outdoor gym, edible community garden, and the pet-friendly Mylo’s gelato café.',
     image: ASSET_HERO_IMAGE,
-    hours: 'Daily: 5:00 AM – 2:00 AM',
+    hours: 'Daily: 5:00 AM – 2:00 AM (Free access)',
     admission: 'Free Access',
     priceNote: 'Free access for all visitors',
     durationMinutes: 30,
     durationLabel: '20 – 40 mins',
     indoor: false,
-    coordinates: { x: 14.0, y: 49.0 },
+    coordinates: { x: 13.5, y: 48.0 },
     officialUrl: 'https://www.gardensbythebay.com.sg/en/things-to-do/attractions/active-garden.html',
     highlights: [
       'Outdoor fitness zone and interactive musical percussion stations',
@@ -488,7 +496,7 @@ export const FACILITIES_DATA: Facility[] = [
     type: 'visitor-centre',
     typeLabel: 'Visitor Services',
     description: 'Customer service counters, ticket purchase and redemption, stroller and wheelchair rentals, luggage storage, and park maps.',
-    hours: 'Daily: 9:00 AM – 8:30 PM',
+    hours: 'Daily: 9:00 AM – 8:00 PM (Ticketing counters close at 8:00 PM; automated kiosks open till late)',
     coordinates: { x: 65.5, y: 69.5 },
     tips: 'Complimentary park maps in English, Mandarin, Japanese, and Korean. Automated ticketing kiosks available.'
   },
@@ -507,8 +515,8 @@ export const FACILITIES_DATA: Facility[] = [
     name: 'Park Shuttle Service Hub',
     type: 'shuttle',
     typeLabel: 'Electric Shuttle',
-    description: 'Eco-friendly electric shuttle operating between Bayfront Plaza (MRT DT16/CE1) and the Cooled Conservatories.',
-    hours: 'Daily: 9:00 AM – 9:00 PM (Every 10 minutes)',
+    description: 'Eco-friendly electric shuttle operating between Bayfront Plaza (MRT DT16/CE1 Exit B) and the Cooled Conservatories.',
+    hours: 'Daily: 9:00 AM – 9:00 PM (Last ride at 8:45 PM; every 10 minutes)',
     coordinates: { x: 44.0, y: 45.0 },
     tips: 'SGD 3 for unlimited rides all day. Free for children under 0.9m and wheelchair passengers.'
   },
@@ -579,7 +587,7 @@ export const CURATED_ITINERARIES: CuratedItinerary[] = [
     targetAudience: 'Photographers & Evening Explorers',
     durationLabel: '2 Hours',
     totalMinutes: 120,
-    description: 'Capture the golden hour over Marina Bay, witness the 7:45 PM Garden Rhapsody light show, and capture illuminated Supertree reflections.',
+    description: 'Capture golden hour over Marina Bay, witness the 7:45 PM Garden Rhapsody light show, and capture illuminated Supertree reflections.',
     recommendedTime: 'Evening (6:30 PM – 8:30 PM)',
     attractionIds: ['supertree-observatory', 'supertree-grove', 'dragonfly-lake'],
     stopsCount: 3,
@@ -590,13 +598,14 @@ export const CURATED_ITINERARIES: CuratedItinerary[] = [
 export const GARDENS_QUICK_STATS = [
   { value: '101', unit: 'Hectares', label: 'Lush Botanical Parkland' },
   { value: '1.5M+', unit: 'Plants', label: 'From 5 Global Continents' },
-  { value: '18', unit: 'Supertrees', label: 'Vertical Living Gardens' },
-  { value: '3', unit: 'Cooled Biomes', label: 'World Record Conservatories' }
+  { value: '18', unit: 'Supertrees', label: '18 Supertrees across park (12 in Grove, 6 in Golden & Silver Gardens)' },
+  { value: '2', unit: 'Cooled Domes', label: 'Cooled Glass Conservatories (Flower Dome & Cloud Forest)' }
 ];
 
 export const GENERAL_VISITOR_INFO = {
   generalHours: 'Outdoor Gardens: 5:00 AM – 2:00 AM Daily (Free Access)',
-  conservatoriesHours: 'Cooled Conservatories & Floral Fantasy: 9:00 AM – 9:00 PM (Last Entry 8:30 PM)',
+  conservatoriesHours: 'Cooled Conservatories: 9:00 AM – 9:00 PM (Last Entry 8:30 PM)',
+  floralFantasyHours: 'Floral Fantasy (Bayfront Plaza): Mon–Fri: 10:00 AM – 7:00 PM; Sat/Sun/PH: 10:00 AM – 8:00 PM',
   lightShowTimings: 'Garden Rhapsody: Daily at 7:45 PM and 8:45 PM (Supertree Grove, 15 Mins, Free Admission)',
   mrtLines: [
     {

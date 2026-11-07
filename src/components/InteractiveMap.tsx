@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Attraction, Facility, AttractionCategory } from '../types/gardens';
 import { ATTRACTIONS_DATA, FACILITIES_DATA, ASSET_MAP_IMAGE } from '../data/attractions';
+import { SupportedLanguage, TRANSLATIONS } from '../data/translations';
 
 interface InteractiveMapProps {
   selectedAttractionId: string | null;
@@ -15,6 +16,7 @@ interface InteractiveMapProps {
   onFilterChange: (filter: AttractionCategory | 'all') => void;
   onNavigateToAttractionTab?: () => void;
   isKioskMode?: boolean;
+  currentLang?: SupportedLanguage;
 }
 
 export const InteractiveMap: React.FC<InteractiveMapProps> = ({
@@ -23,8 +25,10 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   itineraryAttractionIds,
   activeFilter,
   onFilterChange,
-  isKioskMode = false
+  isKioskMode = false,
+  currentLang = 'en'
 }) => {
+  const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState<number>(1);
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -40,7 +44,6 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   // Touch pinch zoom state
   const touchDistanceRef = useRef<number | null>(null);
 
-  // Zoom limits
   const MIN_ZOOM = 1;
   const MAX_ZOOM = 3.5;
 
@@ -50,14 +53,28 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     return attraction.category === activeFilter;
   });
 
+  // Localized name helper
+  const getLocalizedName = (attraction: Attraction) => {
+    return t.attractionNames[attraction.id]?.name || attraction.name;
+  };
+
+  const getLocalizedCategory = (attraction: Attraction) => {
+    return t.attractionNames[attraction.id]?.categoryLabel || attraction.categoryLabel;
+  };
+
   // Search results
   const searchResults = searchQuery.trim() === '' 
     ? [] 
-    : ATTRACTIONS_DATA.filter(a => 
-        a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        a.categoryLabel.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        a.highlights.some(h => h.toLowerCase().includes(searchQuery.toLowerCase()))
-      ).slice(0, 5);
+    : ATTRACTIONS_DATA.filter(a => {
+        const localized = getLocalizedName(a);
+        const q = searchQuery.toLowerCase();
+        return (
+          a.name.toLowerCase().includes(q) ||
+          localized.toLowerCase().includes(q) ||
+          a.categoryLabel.toLowerCase().includes(q) ||
+          a.highlights.some(h => h.toLowerCase().includes(q))
+        );
+      }).slice(0, 5);
 
   // Reset map view
   const handleResetView = useCallback(() => {
@@ -77,13 +94,12 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     });
   };
 
-  // Center on specific coordinates (0 - 100 percentage)
+  // Center on specific coordinates
   const centerOnLocation = useCallback((targetX: number, targetY: number, targetZoom: number = 2.0) => {
     if (!containerRef.current) return;
     const { clientWidth, clientHeight } = containerRef.current;
     
     setZoom(targetZoom);
-    // Convert 0-100 percentage to offset relative to center
     const offsetX = (50 - targetX) * (clientWidth / 100) * targetZoom;
     const offsetY = (50 - targetY) * (clientHeight / 100) * targetZoom;
     
@@ -135,7 +151,6 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
   // Mouse drag handlers
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Only drag with main button
     if (e.button !== 0) return;
     setIsDragging(true);
     setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
@@ -143,7 +158,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return;
-    const maxBound = 600 * (zoom - 0.7);
+    const maxBound = 650 * (zoom - 0.7);
     const newX = Math.max(Math.min(e.clientX - dragStart.x, maxBound), -maxBound);
     const newY = Math.max(Math.min(e.clientY - dragStart.y, maxBound), -maxBound);
     setPan({ x: newX, y: newY });
@@ -153,7 +168,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     setIsDragging(false);
   };
 
-  // Touch handlers (pan and pinch zoom)
+  // Touch handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
       setIsDragging(true);
@@ -170,7 +185,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (e.touches.length === 1 && isDragging) {
-      const maxBound = 600 * (zoom - 0.7);
+      const maxBound = 650 * (zoom - 0.7);
       const newX = Math.max(Math.min(e.touches[0].clientX - dragStart.x, maxBound), -maxBound);
       const newY = Math.max(Math.min(e.touches[0].clientY - dragStart.y, maxBound), -maxBound);
       setPan({ x: newX, y: newY });
@@ -190,74 +205,50 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     touchDistanceRef.current = null;
   };
 
-  // Get ordered itinerary attractions for route polylines
+  // Ordered itinerary attractions for route polylines
   const orderedItineraryAttractions = itineraryAttractionIds
     .map(id => ATTRACTIONS_DATA.find(a => a.id === id))
     .filter((a): a is Attraction => a !== undefined);
 
-  // SVG route path coordinates
   const routePointsString = orderedItineraryAttractions
     .map(a => `${a.coordinates.x * 10},${a.coordinates.y * 5.625}`)
     .join(' ');
 
-  // Color helper for categories
   const getCategoryTheme = (category: AttractionCategory) => {
     switch (category) {
       case 'conservatory':
-        return {
-          bg: 'bg-emerald-600',
-          border: 'border-emerald-300',
-          ring: 'ring-emerald-400',
-          glow: 'shadow-emerald-500/50',
-          badge: 'bg-emerald-800 text-emerald-100',
-          dot: '#059669'
-        };
+        return { bg: 'bg-emerald-600', ring: 'ring-emerald-400' };
       case 'supertree':
-        return {
-          bg: 'bg-purple-600',
-          border: 'border-purple-300',
-          ring: 'ring-purple-400',
-          glow: 'shadow-purple-500/50',
-          badge: 'bg-purple-800 text-purple-100',
-          dot: '#9333ea'
-        };
+        return { bg: 'bg-purple-600', ring: 'ring-purple-400' };
       case 'outdoor-garden':
-        return {
-          bg: 'bg-amber-600',
-          border: 'border-amber-300',
-          ring: 'ring-amber-400',
-          glow: 'shadow-amber-500/50',
-          badge: 'bg-amber-800 text-amber-100',
-          dot: '#d97706'
-        };
+        return { bg: 'bg-amber-600', ring: 'ring-amber-400' };
       case 'lake-nature':
-        return {
-          bg: 'bg-cyan-600',
-          border: 'border-cyan-300',
-          ring: 'ring-cyan-400',
-          glow: 'shadow-cyan-500/50',
-          badge: 'bg-cyan-800 text-cyan-100',
-          dot: '#0891b2'
-        };
+        return { bg: 'bg-cyan-600', ring: 'ring-cyan-400' };
       case 'family':
-        return {
-          bg: 'bg-rose-600',
-          border: 'border-rose-300',
-          ring: 'ring-rose-400',
-          glow: 'shadow-rose-500/50',
-          badge: 'bg-rose-800 text-rose-100',
-          dot: '#e11d48'
-        };
+        return { bg: 'bg-rose-600', ring: 'ring-rose-400' };
       default:
-        return {
-          bg: 'bg-stone-700',
-          border: 'border-stone-300',
-          ring: 'ring-stone-400',
-          glow: 'shadow-stone-500/50',
-          badge: 'bg-stone-800 text-stone-100',
-          dot: '#44403c'
-        };
+        return { bg: 'bg-stone-700', ring: 'ring-stone-400' };
     }
+  };
+
+  // Smart placement for tooltip to prevent overlaps near Supertree Grove
+  const getTooltipPositionStyle = (attractionId: string, coordX: number) => {
+    let verticalPlacement = 'bottom-full mb-2';
+    if (attractionId === 'serene-garden' || attractionId === 'ocbc-skyway') {
+      verticalPlacement = 'top-full mt-2';
+    } else if (attractionId === 'supertree-observatory') {
+      verticalPlacement = 'bottom-full mb-3.5';
+    }
+
+    // Horizontal alignment to prevent screen clipping (e.g. Children's Garden on left)
+    let horizontalAlignment = 'left-1/2 -translate-x-1/2';
+    if (coordX < 18) {
+      horizontalAlignment = 'left-0 translate-x-0';
+    } else if (coordX > 82) {
+      horizontalAlignment = 'right-0 translate-x-0';
+    }
+
+    return `${verticalPlacement} ${horizontalAlignment}`;
   };
 
   return (
@@ -275,7 +266,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             <Search className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
             <input
               type="text"
-              placeholder="Search biomes, lakes, MRT..."
+              placeholder={t.map.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -312,8 +303,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                   className="w-full flex items-center justify-between px-3.5 py-2.5 text-left hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border-b border-stone-50 dark:border-stone-800/50 transition-colors"
                 >
                   <div>
-                    <div className="text-sm font-medium text-stone-900 dark:text-stone-100">{item.name}</div>
-                    <div className="text-xs text-stone-500">{item.categoryLabel} · {item.admission}</div>
+                    <div className="text-sm font-medium text-stone-900 dark:text-stone-100">{getLocalizedName(item)}</div>
+                    <div className="text-xs text-stone-500">{getLocalizedCategory(item)} · {item.admission}</div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-stone-400" />
                 </button>
@@ -325,12 +316,12 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         {/* Category Filter Chips on Map */}
         <div className="hidden lg:flex items-center gap-1.5 bg-white/90 dark:bg-stone-900/90 backdrop-blur-md p-1.5 rounded-xl border border-stone-200/80 dark:border-stone-700/80 shadow-md pointer-events-auto">
           {[
-            { id: 'all', label: 'All Highlights' },
-            { id: 'conservatory', label: 'Conservatories' },
-            { id: 'supertree', label: 'Supertrees' },
-            { id: 'outdoor-garden', label: 'Outdoor Gardens' },
-            { id: 'lake-nature', label: 'Lakes & Nature' },
-            { id: 'family', label: 'Family' },
+            { id: 'all', label: t.map.allHighlights },
+            { id: 'conservatory', label: t.map.conservatories },
+            { id: 'supertree', label: t.map.supertrees },
+            { id: 'outdoor-garden', label: t.map.outdoorGardens },
+            { id: 'lake-nature', label: t.map.lakes },
+            { id: 'family', label: t.map.family },
           ].map(tab => (
             <button
               key={tab.id}
@@ -348,7 +339,6 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
         {/* Map Utility Actions */}
         <div className="flex items-center gap-2 pointer-events-auto ml-auto">
-          {/* Layer Toggles */}
           <button
             onClick={() => setShowFacilities(!showFacilities)}
             title="Toggle Transport & Facilities"
@@ -359,7 +349,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             }`}
           >
             <Layers className="w-4 h-4" />
-            <span className="hidden sm:inline">Amenities</span>
+            <span className="hidden sm:inline">{t.map.amenities}</span>
           </button>
 
           {itineraryAttractionIds.length > 0 && (
@@ -373,7 +363,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
               }`}
             >
               <Navigation className="w-4 h-4" />
-              <span className="hidden sm:inline">Route ({itineraryAttractionIds.length})</span>
+              <span className="hidden sm:inline">{t.map.route} ({itineraryAttractionIds.length})</span>
             </button>
           )}
 
@@ -406,22 +396,27 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
           }}
         >
           {/* Base Illustrated Map Graphic */}
-          <div className="relative w-full aspect-[16/9] max-w-none shadow-2xl overflow-hidden rounded-lg">
+          <div className="relative w-full aspect-[16/9] max-w-none shadow-2xl overflow-hidden rounded-lg bg-emerald-950">
             <img
               src={ASSET_MAP_IMAGE}
+              onError={(e) => {
+                // Guaranteed fallback to /public/images/
+                if (!e.currentTarget.src.includes('/images/')) {
+                  e.currentTarget.src = '/images/illustrated_gardens_map_1794030377958.jpg';
+                }
+              }}
               alt="Gardens by the Bay Illustrated Visitor Map"
-              className="w-full h-full object-cover pointer-events-none select-none"
+              className="w-full h-full object-cover pointer-events-none select-none block"
               draggable={false}
             />
 
-            {/* SVG Interactive Overlay Layer (1000x562.5 viewBox matching 16:9 ratio) */}
+            {/* SVG Interactive Overlay Layer */}
             <svg
               className="absolute inset-0 w-full h-full pointer-events-none"
               viewBox="0 0 1000 562.5"
               preserveAspectRatio="xMidYMid slice"
             >
               <defs>
-                {/* Route Glow Filter */}
                 <filter id="routeGlow" x="-20%" y="-20%" width="140%" height="140%">
                   <feGaussianBlur stdDeviation="3" result="blur" />
                   <feMerge>
@@ -429,7 +424,6 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                     <feMergeNode in="SourceGraphic" />
                   </feMerge>
                 </filter>
-                {/* Linear gradient for itinerary line */}
                 <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#8b5cf6" />
                   <stop offset="50%" stopColor="#ec4899" />
@@ -440,7 +434,6 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
               {/* Connecting Itinerary Path Polyline */}
               {showRoute && orderedItineraryAttractions.length > 1 && (
                 <g className="transition-opacity duration-300">
-                  {/* Outer glow stroke */}
                   <polyline
                     points={routePointsString}
                     fill="none"
@@ -451,7 +444,6 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                     strokeLinejoin="round"
                     filter="url(#routeGlow)"
                   />
-                  {/* Animated dashed walking trail */}
                   <polyline
                     points={routePointsString}
                     fill="none"
@@ -473,6 +465,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
               const itineraryIndex = itineraryAttractionIds.indexOf(attraction.id);
               const isInItinerary = itineraryIndex !== -1;
               const theme = getCategoryTheme(attraction.category);
+              const localizedName = getLocalizedName(attraction);
+              const tooltipClass = getTooltipPositionStyle(attraction.id, attraction.coordinates.x);
 
               return (
                 <div
@@ -492,9 +486,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                   onMouseEnter={() => setHoveredAttractionId(attraction.id)}
                   onMouseLeave={() => setHoveredAttractionId(null)}
                 >
-                  {/* Pin Body */}
                   <div className="relative group flex items-center justify-center">
-                    {/* Pulsing Aura if selected or in itinerary */}
                     {(isSelected || isInItinerary) && (
                       <div 
                         className={`absolute -inset-2.5 rounded-full animate-ping opacity-60 ${
@@ -503,8 +495,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                       />
                     )}
 
-                    {/* Outer Pin Button */}
                     <button
+                      type="button"
                       className={`relative flex items-center justify-center rounded-full border-2 transition-all duration-200 shadow-xl ${
                         theme.bg
                       } ${
@@ -514,9 +506,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                             ? 'w-8 h-8 ring-2 ring-purple-300 border-white'
                             : 'w-7 h-7 hover:scale-115 border-white/90 hover:ring-2 hover:ring-white'
                       }`}
-                      aria-label={attraction.name}
+                      aria-label={localizedName}
                     >
-                      {/* Icon or Sequence Number */}
                       {isInItinerary ? (
                         <span className="text-xs font-bold text-white tracking-tighter">
                           {itineraryIndex + 1}
@@ -526,12 +517,12 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                       )}
                     </button>
 
-                    {/* Floating Label Badge */}
+                    {/* Floating Label Badge with Overlap Prevention */}
                     <div 
-                      className={`absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap pointer-events-none transition-all duration-200 ${
-                        isSelected || isHovered || zoom > 1.8
-                          ? 'opacity-100 translate-y-0 scale-100'
-                          : 'opacity-0 translate-y-1 scale-90 sm:opacity-75 sm:scale-95'
+                      className={`absolute ${tooltipClass} pointer-events-none transition-all duration-200 whitespace-nowrap ${
+                        isSelected || isHovered || zoom >= 2.2
+                          ? 'opacity-100 scale-100 z-30'
+                          : 'opacity-0 scale-90'
                       }`}
                     >
                       <div className="flex flex-col items-center">
@@ -545,15 +536,11 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                               {itineraryIndex + 1}
                             </span>
                           )}
-                          <span>{attraction.name}</span>
+                          <span>{localizedName}</span>
                           {attraction.admission === 'Ticketed' && (
                             <Ticket className="w-3 h-3 text-amber-300 inline" />
                           )}
                         </div>
-                        {/* Caret arrow */}
-                        <div className={`w-0 h-0 border-x-4 border-x-transparent border-t-4 ${
-                          isSelected ? 'border-t-amber-500' : 'border-t-stone-900/90'
-                        }`} />
                       </div>
                     </div>
                   </div>
@@ -561,7 +548,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
               );
             })}
 
-            {/* Facilities & Services Hotspots (MRT, Shuttle, Restrooms, Dining) */}
+            {/* Facilities Hotspots (MRT, Shuttle, Restrooms, Dining) */}
             {showFacilities && FACILITIES_DATA.map(fac => {
               return (
                 <div
@@ -581,7 +568,6 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                     {fac.type === 'parking' && <MapPin className="w-3 h-3 text-sky-300" />}
                   </div>
 
-                  {/* Facility Tooltip */}
                   <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-20">
                     <div className="px-2 py-1 rounded-md bg-stone-900/95 text-stone-200 text-[11px] whitespace-nowrap border border-stone-700 shadow-lg">
                       <p className="font-semibold text-white">{fac.name}</p>
@@ -598,33 +584,33 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       {/* Floating Bottom Left Legend */}
       <div className="absolute bottom-4 left-4 z-20 pointer-events-none hidden sm:block">
         <div className="bg-stone-900/85 backdrop-blur-md border border-stone-700/80 p-2.5 rounded-xl shadow-xl text-stone-300 text-xs flex flex-col gap-1.5 pointer-events-auto">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Map Legend</div>
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">{t.map.legendTitle}</div>
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-              Conservatories
+              {t.map.conservatories}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
-              Supertrees
+              {t.map.supertrees}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-              Gardens
+              {t.map.outdoorGardens}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-cyan-500" />
-              Lakes
+              {t.map.lakes}
             </span>
           </div>
           <div className="text-[10px] text-stone-400 flex items-center gap-1 pt-1 border-t border-stone-800">
             <Compass className="w-3 h-3 text-emerald-400" />
-            Drag to pan · Scroll or pinch to zoom
+            {t.map.dragHint}
           </div>
         </div>
       </div>
 
-      {/* Floating Bottom Right Controls (Zoom, Reset, Recenter) */}
+      {/* Floating Bottom Right Controls */}
       <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2 pointer-events-auto">
         <div className="flex flex-col bg-white/95 dark:bg-stone-900/95 backdrop-blur-md rounded-xl shadow-xl border border-stone-200 dark:border-stone-700 overflow-hidden">
           <button

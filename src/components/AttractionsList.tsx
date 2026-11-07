@@ -5,20 +5,24 @@ import {
 } from 'lucide-react';
 import { Attraction, AttractionCategory, AdmissionType } from '../types/gardens';
 import { ATTRACTIONS_DATA } from '../data/attractions';
+import { SupportedLanguage, TRANSLATIONS } from '../data/translations';
 
 interface AttractionsListProps {
   onSelectAttraction: (attraction: Attraction) => void;
   itineraryAttractionIds: string[];
   onToggleItinerary: (attractionId: string) => void;
   onNavigateToMapWithAttraction: (attraction: Attraction) => void;
+  currentLang?: SupportedLanguage;
 }
 
 export const AttractionsList: React.FC<AttractionsListProps> = ({
   onSelectAttraction,
   itineraryAttractionIds,
   onToggleItinerary,
-  onNavigateToMapWithAttraction
+  onNavigateToMapWithAttraction,
+  currentLang = 'en'
 }) => {
+  const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<AttractionCategory | 'all'>('all');
   const [selectedAdmission, setSelectedAdmission] = useState<AdmissionType | 'all'>('all');
@@ -26,10 +30,12 @@ export const AttractionsList: React.FC<AttractionsListProps> = ({
 
   // Filter logic
   const filteredAttractions = ATTRACTIONS_DATA.filter(attraction => {
+    const locName = t.attractionNames[attraction.id]?.name || attraction.name;
+
     // Search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchName = attraction.name.toLowerCase().includes(q);
+      const matchName = attraction.name.toLowerCase().includes(q) || locName.toLowerCase().includes(q);
       const matchCategory = attraction.categoryLabel.toLowerCase().includes(q);
       const matchDesc = attraction.description.toLowerCase().includes(q);
       const matchHighlight = attraction.highlights.some(h => h.toLowerCase().includes(q));
@@ -64,7 +70,7 @@ export const AttractionsList: React.FC<AttractionsListProps> = ({
           World-Class Horticultural Architecture
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
-          Attractions & Horticultural Wonders
+          {t.nav.attractions} & Horticultural Wonders
         </h1>
         <p className="text-sm text-stone-600 dark:text-stone-400 max-w-2xl">
           From record-breaking glass biomes and misty waterfalls to vertical Supertrees and cultural heritage trails across 101 hectares.
@@ -80,7 +86,7 @@ export const AttractionsList: React.FC<AttractionsListProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search attractions, water play, flora, cacti, light shows..."
+            placeholder={t.map.searchPlaceholder}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-stone-50 dark:bg-stone-800/80 border border-stone-200 dark:border-stone-700 text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-700"
           />
         </div>
@@ -90,17 +96,18 @@ export const AttractionsList: React.FC<AttractionsListProps> = ({
           {/* Category Tabs */}
           <div className="flex flex-wrap items-center gap-1.5">
             {[
-              { id: 'all', label: 'All Categories' },
-              { id: 'conservatory', label: 'Cooled Conservatories' },
-              { id: 'supertree', label: 'Supertrees & Aerial' },
-              { id: 'outdoor-garden', label: 'Outdoor Gardens' },
-              { id: 'lake-nature', label: 'Lakes & Nature' },
-              { id: 'family', label: 'Family & Play' },
+              { id: 'all', label: t.map.allHighlights },
+              { id: 'conservatory', label: t.map.conservatories },
+              { id: 'supertree', label: t.map.supertrees },
+              { id: 'outdoor-garden', label: t.map.outdoorGardens },
+              { id: 'lake-nature', label: t.map.lakes },
+              { id: 'family', label: t.map.family },
             ].map(tab => (
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => setSelectedCategory(tab.id as AttractionCategory | 'all')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                   selectedCategory === tab.id
                     ? 'bg-emerald-800 text-white shadow-xs'
                     : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200'
@@ -124,8 +131,9 @@ export const AttractionsList: React.FC<AttractionsListProps> = ({
             </select>
 
             <button
+              type="button"
               onClick={() => setIndoorOnly(!indoorOnly)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors flex items-center gap-1.5 cursor-pointer ${
                 indoorOnly
                   ? 'bg-cyan-50 dark:bg-cyan-950/50 text-cyan-800 dark:text-cyan-200 border-cyan-400'
                   : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 border-stone-200 dark:border-stone-700'
@@ -147,6 +155,9 @@ export const AttractionsList: React.FC<AttractionsListProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredAttractions.map(attraction => {
           const isInItinerary = itineraryAttractionIds.includes(attraction.id);
+          const locName = t.attractionNames[attraction.id]?.name || attraction.name;
+          const locSub = t.attractionNames[attraction.id]?.subtitle || attraction.subtitle;
+          const locCat = t.attractionNames[attraction.id]?.categoryLabel || attraction.categoryLabel;
 
           return (
             <div
@@ -160,15 +171,20 @@ export const AttractionsList: React.FC<AttractionsListProps> = ({
               >
                 <img
                   src={attraction.image}
-                  alt={attraction.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  onError={(e) => {
+                    if (!e.currentTarget.src.includes('/images/')) {
+                      e.currentTarget.src = '/images/flower_dome_interior_1794030379074.jpg';
+                    }
+                  }}
+                  alt={locName}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 block"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-transparent to-transparent" />
 
                 {/* Admission & Category Chips */}
                 <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
                   <span className="px-2.5 py-1 rounded-md bg-stone-900/80 backdrop-blur-md text-[11px] font-semibold text-white border border-stone-700">
-                    {attraction.categoryLabel}
+                    {locCat}
                   </span>
                   <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold backdrop-blur-md ${
                     attraction.admission === 'Ticketed'
@@ -182,10 +198,10 @@ export const AttractionsList: React.FC<AttractionsListProps> = ({
                 {/* Bottom title on image */}
                 <div className="absolute bottom-3 left-3 right-3 text-white">
                   <h3 className="text-xl font-bold tracking-tight text-white group-hover:text-emerald-300 transition-colors">
-                    {attraction.name}
+                    {locName}
                   </h3>
                   <p className="text-xs text-stone-300 truncate">
-                    {attraction.subtitle}
+                    {locSub}
                   </p>
                 </div>
               </div>
@@ -213,31 +229,34 @@ export const AttractionsList: React.FC<AttractionsListProps> = ({
                     )}
                   </div>
                   <div className="text-[11px] text-stone-400 truncate">
-                    Nearest: {attraction.nearestStation}
+                    {t.drawer.nearestArrival}: {attraction.nearestStation}
                   </div>
                 </div>
 
                 {/* Actions */}
                 <div className="pt-2 flex items-center gap-2">
                   <button
+                    type="button"
                     onClick={() => onSelectAttraction(attraction)}
-                    className="flex-1 py-2 px-3 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-xs font-semibold text-stone-800 dark:text-stone-200 transition-colors flex items-center justify-center gap-1"
+                    className="flex-1 py-2 px-3 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-xs font-semibold text-stone-800 dark:text-stone-200 transition-colors flex items-center justify-center gap-1 cursor-pointer"
                   >
                     <span>View Details</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => onNavigateToMapWithAttraction(attraction)}
-                    className="p-2 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
+                    className="p-2 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors cursor-pointer"
                     title="Find on Interactive Map"
                   >
                     <MapPin className="w-4 h-4 text-emerald-700" />
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => onToggleItinerary(attraction.id)}
-                    className={`p-2 rounded-xl transition-colors ${
+                    className={`p-2 rounded-xl transition-colors cursor-pointer ${
                       isInItinerary
                         ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 border border-purple-300 dark:border-purple-800'
                         : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100'

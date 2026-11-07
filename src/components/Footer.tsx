@@ -1,12 +1,16 @@
 import React from 'react';
 import { Compass, ExternalLink, Heart, Sparkles } from 'lucide-react';
+import { SupportedLanguage, TRANSLATIONS } from '../data/translations';
 
 interface FooterProps {
   onNavigateTab: (tab: 'explore' | 'map' | 'attractions' | 'itinerary' | 'info' | 'kiosk') => void;
   onOpenQrModal: () => void;
+  currentLang?: SupportedLanguage;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onNavigateTab, onOpenQrModal }) => {
+export const Footer: React.FC<FooterProps> = ({ onNavigateTab, onOpenQrModal, currentLang = 'en' }) => {
+  const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+
   return (
     <footer className="bg-stone-900 text-stone-400 text-xs border-t border-stone-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 space-y-8">
@@ -15,7 +19,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateTab, onOpenQrModal }) 
           <div className="space-y-3 md:col-span-1">
             <div className="text-base font-bold text-white tracking-tight flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>Gardens by the Bay</span>
+              <span>{t.appName}</span>
             </div>
             <p className="text-stone-400 leading-relaxed text-xs">
               Singapore’s world-renowned horticultural showpiece and national garden. 18 Marina Gardens Drive, Singapore 018953.
@@ -25,32 +29,32 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateTab, onOpenQrModal }) 
           {/* Col 2: Navigation Links */}
           <div className="space-y-2">
             <div className="text-xs font-bold uppercase tracking-wider text-stone-200">
-              Interactive Guide
+              {t.nav.explore}
             </div>
             <ul className="space-y-1.5">
               <li>
-                <button onClick={() => onNavigateTab('explore')} className="hover:text-white transition-colors">
-                  Explore Highlights
+                <button type="button" onClick={() => onNavigateTab('explore')} className="hover:text-white transition-colors cursor-pointer">
+                  {t.nav.explore}
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigateTab('map')} className="hover:text-white transition-colors">
-                  Interactive Illustrated Map
+                <button type="button" onClick={() => onNavigateTab('map')} className="hover:text-white transition-colors cursor-pointer">
+                  {t.nav.map}
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigateTab('attractions')} className="hover:text-white transition-colors">
-                  All 15 Biomes & Sights
+                <button type="button" onClick={() => onNavigateTab('attractions')} className="hover:text-white transition-colors cursor-pointer">
+                  {t.nav.attractions}
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigateTab('itinerary')} className="hover:text-white transition-colors">
-                  Curate Itinerary Route
+                <button type="button" onClick={() => onNavigateTab('itinerary')} className="hover:text-white transition-colors cursor-pointer">
+                  {t.nav.itinerary}
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigateTab('info')} className="hover:text-white transition-colors">
-                  Operating Hours & Transit
+                <button type="button" onClick={() => onNavigateTab('info')} className="hover:text-white transition-colors cursor-pointer">
+                  {t.nav.info}
                 </button>
               </li>
             </ul>
@@ -63,13 +67,13 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateTab, onOpenQrModal }) 
             </div>
             <ul className="space-y-1.5">
               <li>
-                <button onClick={onOpenQrModal} className="hover:text-white transition-colors">
+                <button type="button" onClick={onOpenQrModal} className="hover:text-white transition-colors cursor-pointer">
                   Mobile QR Continuation
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigateTab('kiosk')} className="hover:text-white transition-colors">
-                  Full-Screen Kiosk Terminal Mode
+                <button type="button" onClick={() => onNavigateTab('kiosk')} className="hover:text-white transition-colors cursor-pointer">
+                  {t.nav.kiosk}
                 </button>
               </li>
               <li>
@@ -86,13 +90,13 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateTab, onOpenQrModal }) 
             </ul>
           </div>
 
-          {/* Col 4: StratAgile AI Transformation Client Demo */}
+          {/* Col 4: Digital Visitor Experience Concept */}
           <div className="space-y-2">
             <div className="text-xs font-bold uppercase tracking-wider text-stone-200">
-              StratAgile Demonstration
+              Digital Experience Concept
             </div>
             <p className="text-xs text-stone-400 leading-relaxed">
-              Designed for StratAgile AI transformation showcase. Demonstrating seamless cross-device session continuation, illustrated SVG map wayfinding, and interactive public kiosks.
+              Designed as an interactive digital visitor experience prototype. Demonstrating illustrated SVG map wayfinding, multi-language visitor guides, and seamless QR cross-device session continuation.
             </p>
           </div>
         </div>

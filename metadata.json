@@ -1,6 +1,8 @@
 {
   "name": "Gardens by the Bay – Interactive Visitor Experience",
-  "description": "StratAgile interactive digital visitor web experience and illustrated map guide for Gardens by the Bay, Singapore, featuring itinerary planner, kiosk mode, and cross-device QR continuation.",
+  "description": "Interactive digital visitor web experience and illustrated map guide concept demo for Gardens by the Bay, Singapore, featuring itinerary planner, kiosk mode, and cross-device QR continuation.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
