@@ -23,9 +23,19 @@ import { KioskMode } from './components/KioskMode';
 import { QrShareModal } from './components/QrShareModal';
 
 type AppTab = 'explore' | 'map' | 'attractions' | 'itinerary' | 'info' | 'kiosk';
-
 export default function App() {
-  const [activeTab, setActiveTab] = useState<AppTab>('explore');
+  const [activeTab, setActiveTab] = useState<AppTab>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const tabParam = params.get('tab') as AppTab;
+        if (tabParam && ['explore', 'map', 'attractions', 'itinerary', 'info', 'kiosk'].includes(tabParam)) {
+          return tabParam;
+        }
+      }
+    } catch (e) {}
+    return 'explore';
+  });
   const [selectedAttraction, setSelectedAttraction] = useState<Attraction | null>(null);
   const [itineraryAttractionIds, setItineraryAttractionIds] = useState<string[]>(() => {
     try {
@@ -171,7 +181,9 @@ export default function App() {
 
     // Check for source
     const srcParam = params.get('src');
-    if (srcParam === 'qr_continuation' || srcParam === 'kiosk_station_1') {
+    if (srcParam === 'kiosk_scan' || srcParam === 'kiosk_qr' || srcParam === 'kiosk_station_1') {
+      setSyncToastMessage('Connected from Park Kiosk: Your mobile visitor guide & interactive map are ready.');
+    } else if (srcParam === 'website_qr' || srcParam === 'qr_continuation') {
       setSyncToastMessage('Mobile Session Synchronised: Your itinerary and interactive map are ready.');
     }
   }, []);
@@ -267,7 +279,7 @@ export default function App() {
         )}
 
         {activeTab === 'map' && (
-          <div className="h-[calc(100vh-4rem)] w-full p-2 sm:p-4 max-w-[1700px] mx-auto">
+          <div className="h-[calc(100dvh-7.8rem)] md:h-[calc(100vh-4rem)] w-full p-1.5 sm:p-4 max-w-[1700px] mx-auto">
             <InteractiveMap
               selectedAttractionId={selectedAttraction ? selectedAttraction.id : null}
               onSelectAttraction={handleSelectAttraction}

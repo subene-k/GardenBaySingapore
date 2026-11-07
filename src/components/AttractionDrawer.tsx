@@ -132,10 +132,10 @@ export const AttractionDrawer: React.FC<AttractionDrawerProps> = ({
           </button>
         </div>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto">
+        {/* Scrollable Content with Mobile-safe Bottom Padding */}
+        <div className="flex-1 overflow-y-auto pb-28 sm:pb-8">
           {/* Hero Image Section */}
-          <div className="relative w-full h-72 sm:h-80 bg-stone-900 overflow-hidden">
+          <div className="relative w-full h-56 sm:h-80 bg-stone-900 overflow-hidden">
             <img
               src={attraction.image}
               onError={(e) => {
@@ -148,11 +148,11 @@ export const AttractionDrawer: React.FC<AttractionDrawerProps> = ({
             />
             <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/40 to-transparent" />
 
-            <div className="absolute bottom-4 left-6 right-6 text-white">
+            <div className="absolute bottom-4 left-4 sm:left-6 right-4 sm:right-6 text-white">
               <div className="text-xs font-semibold uppercase tracking-widest text-emerald-300 mb-1">
                 {localizedCategory}
               </div>
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-1">
+              <h2 className="text-xl sm:text-3xl font-bold tracking-tight text-white mb-1">
                 {localizedName}
               </h2>
               <p className="text-xs sm:text-sm text-stone-200">
@@ -162,7 +162,7 @@ export const AttractionDrawer: React.FC<AttractionDrawerProps> = ({
           </div>
 
           {/* Body Information */}
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-5 sm:space-y-6">
             {/* Action Bar: Itinerary Button & View on Map */}
             <div className="flex items-center gap-3">
               <button

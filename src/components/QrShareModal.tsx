@@ -21,15 +21,21 @@ export const QrShareModal: React.FC<QrShareModalProps> = ({
   const [copied, setCopied] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Construct stateful URL
+  // Construct stateful URL for website continuation (never kiosk)
   const searchParams = new URLSearchParams();
+  if (selectedAttractionId) {
+    searchParams.set('tab', 'map');
+    searchParams.set('loc', selectedAttractionId);
+  } else if (itineraryAttractionIds.length > 0) {
+    searchParams.set('tab', 'itinerary');
+  } else {
+    searchParams.set('tab', 'explore');
+  }
+
   if (itineraryAttractionIds.length > 0) {
     searchParams.set('itinerary', itineraryAttractionIds.join(','));
   }
-  if (selectedAttractionId) {
-    searchParams.set('loc', selectedAttractionId);
-  }
-  searchParams.set('src', 'qr_continuation');
+  searchParams.set('src', 'website_qr');
 
   const shareUrl = typeof window !== 'undefined'
     ? `${window.location.origin}${window.location.pathname}?${searchParams.toString()}`

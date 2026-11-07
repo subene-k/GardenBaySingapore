@@ -4,7 +4,7 @@ import {
   Compass, QrCode, ArrowLeft, Sparkles, MapPin, 
   Clock, Navigation, HelpCircle, PhoneCall, Volume2, Globe
 } from 'lucide-react';
-import { Attraction } from '../types/gardens';
+import { Attraction, AttractionCategory } from '../types/gardens';
 import { ATTRACTIONS_DATA } from '../data/attractions';
 import { InteractiveMap } from './InteractiveMap';
 import { SupportedLanguage, TRANSLATIONS } from '../data/translations';
@@ -25,7 +25,7 @@ export const KioskMode: React.FC<KioskModeProps> = ({
   onSelectLang
 }) => {
   const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-  const [activeKioskFilter, setActiveKioskFilter] = useState<'all' | 'conservatory' | 'supertree' | 'family'>('all');
+  const [activeKioskFilter, setActiveKioskFilter] = useState<AttractionCategory | 'all'>('all');
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [idleSeconds, setIdleSeconds] = useState<number>(0);
   const [showIdleWarning, setShowIdleWarning] = useState<boolean>(false);
@@ -40,15 +40,24 @@ export const KioskMode: React.FC<KioskModeProps> = ({
     { id: 'children-garden', icon: '⛲' },
   ];
 
-  // Generate shareable QR code for the kiosk
+  // Generate shareable QR code for the kiosk:
+  // When scanned, it opens the responsive visitor website directly on the phone (never kiosk mode)
   useEffect(() => {
-    const url = `${window.location.origin}${window.location.pathname}?src=kiosk_station_1&lang=${currentLang}`;
+    const searchParams = new URLSearchParams();
+    searchParams.set('tab', 'explore');
+    searchParams.set('src', 'kiosk_scan');
+    searchParams.set('lang', currentLang);
+    if (itineraryAttractionIds.length > 0) {
+      searchParams.set('itinerary', itineraryAttractionIds.join(','));
+    }
+
+    const url = `${window.location.origin}${window.location.pathname}?${searchParams.toString()}`;
     QRCode.toDataURL(url, {
-      width: 220,
+      width: 240,
       margin: 1,
       color: { dark: '#064e3b', light: '#ffffff' }
     }).then(setQrCodeUrl).catch(console.error);
-  }, [currentLang]);
+  }, [currentLang, itineraryAttractionIds]);
 
   // Idle timer to simulate public interactive terminal behavior
   useEffect(() => {
@@ -91,35 +100,35 @@ export const KioskMode: React.FC<KioskModeProps> = ({
   return (
     <div className="min-h-screen bg-stone-950 text-white flex flex-col justify-between p-4 sm:p-6 select-none overflow-x-hidden">
       {/* Kiosk Top Bar */}
-      <header className="flex items-center justify-between pb-4 border-b border-stone-800">
-        <div className="flex items-center gap-4">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 sm:pb-4 border-b border-stone-800 gap-3">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <button
             type="button"
             onClick={onExitKiosk}
-            className="px-4 py-3 rounded-2xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-sm font-semibold flex items-center gap-2 border border-stone-700 active:scale-95 transition-all cursor-pointer"
+            className="px-3 py-2 sm:px-4 sm:py-3 rounded-2xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs sm:text-sm font-semibold flex items-center gap-1.5 sm:gap-2 border border-stone-700 active:scale-95 transition-all cursor-pointer shrink-0"
           >
-            <ArrowLeft className="w-5 h-5 text-emerald-400" />
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
             <span>{t.kiosk.exitKiosk}</span>
           </button>
           
-          <div>
-            <div className="text-[11px] font-bold uppercase tracking-widest text-emerald-400">
-              Interactive Park Terminal #04 · Main Visitor Arrival Plaza
+          <div className="min-w-0">
+            <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-emerald-400 truncate">
+              Interactive Park Terminal #04 · Arrival Plaza
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+            <h1 className="text-lg sm:text-2xl font-bold tracking-tight text-white truncate">
               {t.kiosk.terminalTitle}
             </h1>
           </div>
         </div>
 
         {/* 4 Official Singapore National Languages */}
-        <div className="flex items-center gap-1.5 bg-stone-900 p-1.5 rounded-2xl border border-stone-800">
+        <div className="flex items-center gap-1 bg-stone-900 p-1 sm:p-1.5 rounded-2xl border border-stone-800 self-start sm:self-auto shrink-0">
           {languageButtons.map(({ code, label }) => (
             <button
               key={code}
               type="button"
               onClick={() => onSelectLang(code)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                 currentLang === code
                   ? 'bg-emerald-600 text-white shadow-sm'
                   : 'text-stone-400 hover:text-white hover:bg-stone-800'
@@ -132,15 +141,15 @@ export const KioskMode: React.FC<KioskModeProps> = ({
       </header>
 
       {/* Main Kiosk Layout: 2-Column Touch Grid */}
-      <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 my-6 min-h-[620px]">
+      <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5 my-4 sm:my-6 min-h-0">
         {/* Left 8 Cols: Large Interactive Touch Map */}
-        <div className="lg:col-span-8 flex flex-col h-[520px] lg:h-auto">
+        <div className="lg:col-span-8 flex flex-col h-[420px] sm:h-[480px] lg:h-auto min-h-0">
           <InteractiveMap
             selectedAttractionId={null}
             onSelectAttraction={onSelectAttraction}
             itineraryAttractionIds={itineraryAttractionIds}
             activeFilter={activeKioskFilter}
-            onFilterChange={(f) => setActiveKioskFilter(f === 'amenity' || f === 'lake-nature' || f === 'outdoor-garden' ? 'all' : f)}
+            onFilterChange={(f) => setActiveKioskFilter(f)}
             isKioskMode={true}
             currentLang={currentLang}
           />

@@ -258,63 +258,106 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         isFullscreen ? 'fixed inset-0 z-50' : 'rounded-2xl shadow-xl border border-stone-200/80 dark:border-stone-800'
       }`}
     >
-      {/* Top Floating Control Bar */}
-      <div className="absolute top-4 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 pointer-events-none">
-        {/* Search Input with Autocomplete */}
-        <div className="relative pointer-events-auto w-full sm:w-80 shadow-lg rounded-xl">
-          <div className="flex items-center gap-2 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-stone-200/90 dark:border-stone-700/80">
-            <Search className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
-            <input
-              type="text"
-              placeholder={t.map.searchPlaceholder}
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setShowSearchResults(true);
-              }}
-              onFocus={() => setShowSearchResults(true)}
-              className="w-full bg-transparent text-sm text-stone-900 dark:text-stone-100 placeholder-stone-500 focus:outline-none"
-            />
-            {searchQuery && (
-              <button 
-                onClick={() => { setSearchQuery(''); setShowSearchResults(false); }}
-                className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      {/* Top Floating Control Bar - Fully Mobile Responsive */}
+      <div className="absolute top-2 sm:top-4 left-2 sm:left-4 right-2 sm:right-4 z-20 flex flex-col gap-2 pointer-events-none">
+        {/* Top Search & Actions Row */}
+        <div className="flex items-center gap-2 pointer-events-auto">
+          {/* Search Input with Autocomplete */}
+          <div className="relative flex-1 max-w-md shadow-lg rounded-xl">
+            <div className="flex items-center gap-2 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md px-3 py-2 sm:py-2.5 rounded-xl border border-stone-200/90 dark:border-stone-700/80">
+              <Search className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
+              <input
+                type="text"
+                placeholder={t.map.searchPlaceholder}
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSearchResults(true);
+                }}
+                onFocus={() => setShowSearchResults(true)}
+                className="w-full bg-transparent text-xs sm:text-sm text-stone-900 dark:text-stone-100 placeholder-stone-500 focus:outline-none"
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => { setSearchQuery(''); setShowSearchResults(false); }}
+                  className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Autocomplete Dropdown */}
+            {showSearchResults && searchResults.length > 0 && (
+              <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-stone-900 rounded-xl shadow-2xl border border-stone-200 dark:border-stone-700 overflow-hidden z-30">
+                <div className="px-3 py-1.5 text-xs text-stone-400 border-b border-stone-100 dark:border-stone-800">
+                  Matched Locations
+                </div>
+                {searchResults.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      onSelectAttraction(item);
+                      centerOnLocation(item.coordinates.x, item.coordinates.y, 2.2);
+                      setShowSearchResults(false);
+                      setSearchQuery('');
+                    }}
+                    className="w-full flex items-center justify-between px-3.5 py-2 text-left hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border-b border-stone-50 dark:border-stone-800/50 transition-colors"
+                  >
+                    <div>
+                      <div className="text-xs sm:text-sm font-medium text-stone-900 dark:text-stone-100">{getLocalizedName(item)}</div>
+                      <div className="text-[10px] sm:text-xs text-stone-500">{getLocalizedCategory(item)} · {item.admission}</div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-stone-400" />
+                  </button>
+                ))}
+              </div>
             )}
           </div>
 
-          {/* Autocomplete Dropdown */}
-          {showSearchResults && searchResults.length > 0 && (
-            <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-stone-900 rounded-xl shadow-2xl border border-stone-200 dark:border-stone-700 overflow-hidden z-30">
-              <div className="px-3 py-1.5 text-xs text-stone-400 border-b border-stone-100 dark:border-stone-800">
-                Matched Locations
-              </div>
-              {searchResults.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    onSelectAttraction(item);
-                    centerOnLocation(item.coordinates.x, item.coordinates.y, 2.2);
-                    setShowSearchResults(false);
-                    setSearchQuery('');
-                  }}
-                  className="w-full flex items-center justify-between px-3.5 py-2.5 text-left hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border-b border-stone-50 dark:border-stone-800/50 transition-colors"
-                >
-                  <div>
-                    <div className="text-sm font-medium text-stone-900 dark:text-stone-100">{getLocalizedName(item)}</div>
-                    <div className="text-xs text-stone-500">{getLocalizedCategory(item)} · {item.admission}</div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-stone-400" />
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Quick Action Buttons */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={() => setShowFacilities(!showFacilities)}
+              title="Toggle Transport & Facilities"
+              className={`p-2 sm:p-2.5 rounded-xl backdrop-blur-md shadow-md border text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
+                showFacilities 
+                  ? 'bg-emerald-800 text-white border-emerald-700' 
+                  : 'bg-white/90 dark:bg-stone-900/90 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700'
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+              <span className="hidden md:inline">{t.map.amenities}</span>
+            </button>
+
+            {itineraryAttractionIds.length > 0 && (
+              <button
+                onClick={() => setShowRoute(!showRoute)}
+                title="Toggle Itinerary Route Trail"
+                className={`p-2 sm:p-2.5 rounded-xl backdrop-blur-md shadow-md border text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
+                  showRoute 
+                    ? 'bg-purple-800 text-white border-purple-700' 
+                    : 'bg-white/90 dark:bg-stone-900/90 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700'
+                }`}
+              >
+                <Navigation className="w-4 h-4" />
+                <span className="hidden md:inline">{t.map.route}</span>
+                <span className="text-[10px] font-bold">({itineraryAttractionIds.length})</span>
+              </button>
+            )}
+
+            <button
+              onClick={toggleFullscreen}
+              className="p-2 sm:p-2.5 bg-white/90 dark:bg-stone-900/90 hover:bg-white text-stone-800 dark:text-stone-200 rounded-xl backdrop-blur-md shadow-md border border-stone-200/80 dark:border-stone-700/80 transition-colors cursor-pointer"
+              title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Map'}
+            >
+              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
-        {/* Category Filter Chips on Map */}
-        <div className="hidden lg:flex items-center gap-1.5 bg-white/90 dark:bg-stone-900/90 backdrop-blur-md p-1.5 rounded-xl border border-stone-200/80 dark:border-stone-700/80 shadow-md pointer-events-auto">
+        {/* Category Filter Chips Ribbon - Visible on BOTH Mobile & Desktop */}
+        <div className="w-full flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 pointer-events-auto">
           {[
             { id: 'all', label: t.map.allHighlights },
             { id: 'conservatory', label: t.map.conservatories },
@@ -326,54 +369,15 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             <button
               key={tab.id}
               onClick={() => onFilterChange(tab.id as AttractionCategory | 'all')}
-              className={`px-3 py-1 text-xs font-medium rounded-lg transition-all whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shadow-sm backdrop-blur-md cursor-pointer ${
                 activeFilter === tab.id
-                  ? 'bg-emerald-800 text-white shadow-sm'
-                  : 'text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-stone-800'
+                  ? 'bg-emerald-800 text-white shadow-emerald-950/20'
+                  : 'bg-white/90 dark:bg-stone-900/90 text-stone-700 dark:text-stone-300 hover:bg-white border border-stone-200/80 dark:border-stone-700/80'
               }`}
             >
               {tab.label}
             </button>
           ))}
-        </div>
-
-        {/* Map Utility Actions */}
-        <div className="flex items-center gap-2 pointer-events-auto ml-auto">
-          <button
-            onClick={() => setShowFacilities(!showFacilities)}
-            title="Toggle Transport & Facilities"
-            className={`p-2.5 rounded-xl backdrop-blur-md shadow-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${
-              showFacilities 
-                ? 'bg-emerald-800 text-white border-emerald-700' 
-                : 'bg-white/90 dark:bg-stone-900/90 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700'
-            }`}
-          >
-            <Layers className="w-4 h-4" />
-            <span className="hidden sm:inline">{t.map.amenities}</span>
-          </button>
-
-          {itineraryAttractionIds.length > 0 && (
-            <button
-              onClick={() => setShowRoute(!showRoute)}
-              title="Toggle Itinerary Route Trail"
-              className={`p-2.5 rounded-xl backdrop-blur-md shadow-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${
-                showRoute 
-                  ? 'bg-purple-800 text-white border-purple-700' 
-                  : 'bg-white/90 dark:bg-stone-900/90 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700'
-              }`}
-            >
-              <Navigation className="w-4 h-4" />
-              <span className="hidden sm:inline">{t.map.route} ({itineraryAttractionIds.length})</span>
-            </button>
-          )}
-
-          <button
-            onClick={toggleFullscreen}
-            className="p-2.5 bg-white/90 dark:bg-stone-900/90 hover:bg-white text-stone-800 dark:text-stone-200 rounded-xl backdrop-blur-md shadow-md border border-stone-200/80 dark:border-stone-700/80 transition-colors"
-            title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Map'}
-          >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-          </button>
         </div>
       </div>
 
